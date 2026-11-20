@@ -225,16 +225,12 @@ export default function Write() {
   const uploadPending = async () => {
     let c = cover
     if (c && c.blob && !c.media) {
-      setStatus('업로드')
       c = { ...c, media: (await api.uploadImage(c.blob)).id }
       setCover(c)
     }
-    const pending = side.filter((b) => b.type === 'image' && !b.media).length
-    let n = 0
     const next = []
     for (const b of side) {
       if (b.type === 'image' && !b.media) {
-        setStatus(`업로드 ${++n}/${pending}`)
         next.push({ ...b, media: (await api.uploadImage(b.blob)).id })
       } else next.push(b)
     }
@@ -294,7 +290,15 @@ export default function Write() {
   const draftTime = (t) =>
     new Date(t).toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
 
-  const publish = async () => {
+  // 수정·삭제는 비밀번호를 한 번 더 확인 (confirm: 'edit' | 'delete')
+  const [confirm, setConfirm] = useState(null)
+  const [pw, setPw] = useState('')
+  const toggleConfirm = (what) => {
+    setConfirm((c) => (c === what ? null : what))
+    setPw('')
+  }
+
+  const publish = async (password) => {
     if (busy) return
     const missing =
       kind === 'review'
@@ -308,7 +312,6 @@ export default function Write() {
     setBusy(true)
     try {
       const up = await uploadPending()
-      setStatus('업로드')
       const review = {
         kind,
         season,
@@ -324,7 +327,7 @@ export default function Write() {
         body: f.body,
       }
       const { post } = editing
-        ? await api.updatePost(editing.id, { ...review, date: editing.date })
+        ? await api.updatePost(editing.id, { ...review, date: editing.date, password })
         : kind === 'review'
           ? await api.createPost(review)
           : await api.createPost({ kind, season, title: f.title, writer: f.writer, body: f.body, side: snapshot(null, up.side).side })
@@ -332,6 +335,10 @@ export default function Write() {
       await data.reload()
       navigate(kind === 'review' ? `/${post.season}?album=${post.id}` : `/post/${post.id}`)
     } catch (err) {
+      if (err.message === 'wrong_password') {
+        setStatus('틀림')
+        return setPw('')
+      }
       if (err.status === 401) return navigate('/login', { replace: true })
       setStatus('실패')
     } finally {
@@ -340,19 +347,16 @@ export default function Write() {
   }
 
   // 삭제 (수정 중일 때만): 비밀번호를 한 번 더 확인
-  const [confirmDel, setConfirmDel] = useState(false)
-  const [delPw, setDelPw] = useState('')
-  const removePost = async (e) => {
-    e.preventDefault()
-    if (!delPw || busy) return
+  const removePost = async (password) => {
+    if (busy) return
     setBusy(true)
     try {
-      await api.deletePost(editing.id, delPw)
+      await api.deletePost(editing.id, password)
       await data.reload()
       navigate('/', { replace: true })
     } catch (err) {
       setStatus(err.status === 401 ? '틀림' : '실패')
-      setDelPw('')
+      setPw('')
     } finally {
       setBusy(false)
     }
@@ -501,27 +505,42 @@ export default function Write() {
       </div>
 
       <div className="write-actions">
-        <button type="button" className="is-on" onClick={publish} disabled={busy}>
-          <Ko>{editing ? '수정하기' : '올리기'}</Ko>
-        </button>
-        {editing && (
-          <button type="button" className={confirmDel ? 'is-on' : ''} onClick={() => setConfirmDel(!confirmDel)} disabled={busy}>
-            <Ko>삭제</Ko>
+        {editing ? (
+          <>
+            <button type="button" className={confirm === 'edit' ? 'is-on' : ''} onClick={() => toggleConfirm('edit')} disabled={busy}>
+              <Ko>수정하기</Ko>
+            </button>
+            <button type="button" className={confirm === 'delete' ? 'is-on' : ''} onClick={() => toggleConfirm('delete')} disabled={busy}>
+              <Ko>삭제</Ko>
+            </button>
+            {/* 비밀번호를 넣고 엔터 → 수정 또는 삭제 */}
+            {confirm && (
+              <form
+                className="delete-confirm"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (!pw) return
+                  if (confirm === 'edit') publish(pw)
+                  else removePost(pw)
+                }}
+              >
+                <input
+                  className="field"
+                  type="password"
+                  value={pw}
+                  onChange={(e) => setPw(e.target.value)}
+                  placeholder="PASSWORD"
+                  aria-label={confirm === 'edit' ? '수정 확인 비밀번호' : '삭제 확인 비밀번호'}
+                  autoFocus
+                  autoComplete="current-password"
+                />
+              </form>
+            )}
+          </>
+        ) : (
+          <button type="button" className="is-on" onClick={() => publish()} disabled={busy}>
+            <Ko>올리기</Ko>
           </button>
-        )}
-        {editing && confirmDel && (
-          <form className="delete-confirm" onSubmit={removePost}>
-            <input
-              className="field"
-              type="password"
-              value={delPw}
-              onChange={(e) => setDelPw(e.target.value)}
-              placeholder="PASSWORD"
-              aria-label="삭제 확인 비밀번호"
-              autoFocus
-              autoComplete="current-password"
-            />
-          </form>
         )}
         {!editing && (
           <button type="button" onClick={saveDraft} disabled={busy}>

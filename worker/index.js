@@ -27,6 +27,13 @@ const json = (data, status = 200, headers = {}) =>
 export default {
   async fetch(req, env, ctx) {
     const url = new URL(req.url)
+    // 모든 주소: http로 들어오면 같은 주소의 https로 (로컬 개발 제외)
+    if (url.protocol === 'http:' && !['localhost', '127.0.0.1'].includes(url.hostname)) {
+      return new Response(null, {
+        status: 301,
+        headers: { location: `https://${url.host}${url.pathname}${url.search}`, 'cache-control': 'public, max-age=86400' },
+      })
+    }
     if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(req)
     try {
       return await api(req, env, ctx, url)
@@ -132,10 +139,15 @@ async function api(req, env, ctx, url) {
     return json({ post })
   }
 
-  // 글 수정: 같은 id로 덮어씀. 기본 데이터(albums.js) 글도 이 id로 저장하면 화면에서 대체됨
+  // 글 수정(로그인 + 비밀번호 한 번 더): 같은 id로 덮어씀. 기본 데이터(albums.js) 글도 이 id로 저장하면 화면에서 대체됨
   const edit = path.match(/^\/posts\/([a-z0-9][a-z0-9-]{0,80})$/)
   if (edit && method === 'PUT') {
     const body = await req.json().catch(() => null)
+    // 수정도 비밀번호 한 번 더
+    if (typeof body?.password !== 'string' || !(await safeEqual(body.password, env.ADMIN_PASSWORD))) {
+      await new Promise((r) => setTimeout(r, 800))
+      return json({ error: 'wrong_password' }, 401)
+    }
     const prev = await env.DB.prepare('SELECT data FROM posts WHERE id = ?').bind(edit[1]).first()
     const date = prev ? JSON.parse(prev.data).date : /^\d{4}\.\d{2}\.\d{2}$/.test(body?.date || '') ? body.date : undefined
     const post = validate(body, { id: edit[1], date })

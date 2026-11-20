@@ -9,7 +9,8 @@
     "binding": "ASSETS",
     // /26FW 같은 주소로 바로 들어와도 index.html → React Router가 처리
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*"]
+    // 모든 요청을 Worker가 먼저 받음 → http를 https로 넘기기 위해 (worker/index.js)
+    "run_worker_first": true
   },
   // 글: D1 (SQL)
   "d1_databases": [
