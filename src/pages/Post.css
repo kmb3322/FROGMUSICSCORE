@@ -1,0 +1,213 @@
+/* 기획 게시물 보기 · 글쓰기 공통 레이아웃
+   좌측: 글 (화면 1/3) / 우측: 사진 (가로폭 고정, 오른쪽 여백 = 왼쪽 여백) */
+.post-page {
+  --left: calc(33.333vw - var(--gutter) * 2);
+  --img-w: min(42vw, 640px);
+  padding: 0 var(--gutter) var(--gutter);
+  color: var(--fg);
+}
+
+.post-info {
+  max-width: var(--left);
+  margin-bottom: var(--line);
+}
+
+/* 본문 + 우측 칸: 서로 따로 흐르는 두 칸. 우측 칸 맨 위 = 본문 첫 줄 */
+.post-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--gutter);
+}
+.post-body {
+  flex: 0 1 var(--left);
+  max-width: var(--left);
+  white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* 우측 칸: 글(엔터 포함)과 사진이 차례로 쌓임. 사진 가로폭 고정 */
+.post-side {
+  flex: 0 0 var(--img-w);
+  width: var(--img-w);
+}
+.post-side-text {
+  white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.post-img {
+  display: block;
+  width: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+
+.post-meta {
+  display: flex;
+  gap: 1em;
+  max-width: var(--left);
+  margin: var(--line) 0 0;
+}
+
+/* 모바일: 글 아래로 우측 칸을 이어서 */
+@media (max-width: 768px) {
+  .post-page {
+    --left: 100%;
+    --img-w: 100%;
+  }
+  .post-main {
+    flex-direction: column;
+    gap: var(--line);
+  }
+  .post-body,
+  .post-side {
+    flex: none;
+    width: 100%;
+  }
+}
+
+/* ── 비밀번호 · 글쓰기 ── */
+.post-page button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.post-page button.is-on {
+  background: var(--accent);
+}
+.post-page button:disabled {
+  cursor: progress;
+}
+
+/* 선 없는 입력칸: 글자처럼 보이게 */
+.field {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  outline: none;
+  caret-color: var(--fg);
+}
+.field::placeholder {
+  color: var(--muted);
+}
+.field-body {
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: keep-all;
+}
+.field-year {
+  display: inline-block;
+  width: 2.5em;
+}
+
+.login {
+  max-width: var(--left);
+}
+
+.write-opts {
+  max-width: var(--left);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--line) / 2);
+  margin-bottom: var(--line);
+}
+.choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1em;
+  align-items: baseline;
+}
+
+/* 리뷰 커버 칸 (정사각형) */
+.write-cover {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: var(--cover) !important;
+}
+.write-cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 기획 우측 칸: 사진 사이 글 칸에 엔터를 쳐서 위치 조정 */
+.write-side {
+  position: relative;
+}
+.write-add {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: calc(var(--line) / 2);
+}
+.write-img {
+  position: relative;
+  width: 100%;
+}
+.write-img img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.write-img button {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: var(--accent) !important;
+}
+
+.write-actions {
+  display: flex;
+  gap: 1em;
+  max-width: var(--left);
+  margin-top: calc(var(--line) * 2);
+}
+
+@media (max-width: 768px) {
+  .write-add {
+    position: static;
+  }
+}
+
+/* 임시저장 목록 */
+.drafts {
+  max-width: var(--left);
+  margin-top: calc(var(--line) * 2);
+  display: flex;
+  flex-direction: column;
+}
+.draft {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1em;
+}
+.draft.is-current > button:first-child {
+  background: var(--accent);
+}
+
+.is-on-text {
+  background: var(--accent);
+}
+
+.delete-confirm {
+  flex: 0 0 8em;
+}

@@ -1,0 +1,238 @@
+:root {
+  --peek-total: 64px; /* 뒤에 쌓인 커버 4장 × 16px */
+  /* 앨범 정보(번호~점수)는 로고 영역(여백 포함) 바로 아래에서 시작 */
+  --caption-top: calc(var(--gutter) * 2 + var(--line) * 3); /* 로고 영역 바로 아래 */
+  /* 커버 윗변 = 평론글 첫 줄 시작 위치: 아티스트·제목·작성자·점수 4줄 + 한 줄 띄움 */
+  --cover-top: calc(var(--caption-top) + var(--line) * 5);
+  --cover-size: min(42vw, calc(100vh - var(--cover-top) - var(--peek-total) - var(--gutter)));
+}
+
+/* ── 좌측 1/3: 로고 + 현재 앨범 정보 ──
+   고정이 아니라 문서 흐름에 있어서, 글이 길면 글씨 위 스크롤 = 화면 전체 스크롤 */
+.left {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 33.333vw;
+  min-height: 100vh;
+  padding: var(--gutter);
+  z-index: 10;
+  color: var(--fg-diff);
+  mix-blend-mode: difference;
+  pointer-events: none; /* 빈 곳은 아래 커버 영역으로 통과 (모바일에서 겹침) */
+}
+.logo,
+.caption {
+  pointer-events: auto;
+}
+
+/* 반전 계산용 바탕 (body 배경과 같은 색) */
+.base {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+}
+
+/* 초록 띠: 화면 가로 전체. 커버 위, 글씨 아래.
+   .left(difference) 안에 있으므로 역산한 색을 칠해야 기본 배경 위에서 #61bb46 으로 보임 */
+.band {
+  position: absolute;
+  left: 0;
+  width: 100vw;
+  background: var(--accent-diff);
+  pointer-events: none;
+}
+/* 정보 영역 가로 전체 클릭 영역 (투명, 글씨 위) */
+.hit {
+  position: absolute;
+  left: 0;
+  width: 100vw;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 1;
+}
+
+.review-meta {
+  display: flex;
+  gap: 1em;
+}
+
+.logo {
+  position: relative;
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+.caption {
+  position: absolute;
+  top: var(--caption-top);
+  left: var(--gutter);
+  right: var(--gutter);
+  padding-bottom: var(--gutter);
+}
+
+/* ── 스크롤 사이 배경 색 흐름 ── */
+.flow {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.flow-layer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* 회전해도 화면 모서리가 비지 않도록 대각선보다 크게 */
+  width: 160vmax;
+  height: 160vmax;
+  background-size: cover;
+  background-position: center;
+  filter: blur(80px) saturate(1.25);
+  will-change: transform, opacity;
+}
+
+.review {
+  margin-top: 1.15em;
+  max-width: 32em;
+}
+.review p {
+  margin: 0 0 1.15em;
+}
+
+/* ── 우측 2/3: 쌓인 앨범 커버 ── */
+.right {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 66.667vw;
+  height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end; /* 오른쪽 여백 = 왼쪽 여백(gutter) */
+  padding-right: var(--gutter);
+  padding-top: var(--cover-top);
+  overflow: hidden;
+}
+
+.stack {
+  position: relative;
+  width: var(--cover-size);
+  aspect-ratio: 1 / 1;
+}
+
+.cover {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  background: var(--cover);
+}
+
+.cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+
+
+/* ── 모바일: 커버 아래에 앨범 정보 ── */
+@media (max-width: 768px) {
+  :root {
+    --gutter: 16px;
+    --cover-size: min(78vw, 46vh);
+    --cover-top: calc(var(--gutter) * 3 + var(--line) * 3); /* 로고 영역 바로 아래 */
+  }
+  .left,
+  .right {
+    width: 100vw;
+  }
+  .right {
+    /* 세로 화면: 커버 영역도 글과 함께 스크롤 → 글이 길어 화면을 내려도
+       쌓인 커버 밑부분이 앨범 정보 띠를 침범하지 않음 */
+    position: absolute;
+    justify-content: center;
+    padding-right: 0;
+  }
+  .caption {
+    top: calc(var(--cover-top) + var(--cover-size) + var(--peek-total) + var(--gutter));
+  }
+}
+
+/* ── 리뷰 Likes · Share ── */
+.review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1em;
+  margin: 0;
+}
+.review-actions button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+/* .left(difference) 안이라 역산한 초록 */
+.review-actions button.is-on {
+  background: var(--accent-diff);
+}
+
+/* Share → 사진: 카드 미리보기 · 저장 */
+.share-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: var(--line);
+  padding: var(--gutter);
+  background: var(--bg);
+  color: var(--fg);
+}
+.share-sheet button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.share-bar {
+  display: flex;
+  gap: 1em;
+}
+.share-bar .is-on {
+  background: var(--accent);
+}
+.share-cards {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: var(--gutter);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.share-cards::-webkit-scrollbar {
+  display: none;
+}
+.share-cards button {
+  flex: 0 0 auto;
+  height: 100%;
+}
+.share-cards img {
+  display: block;
+  height: 100%;
+  max-height: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: contain;
+}

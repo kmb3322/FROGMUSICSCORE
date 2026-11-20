@@ -1,0 +1,196 @@
+/* 메인 화면 — 원사이즈, 검정, 선·박스 없음. 여백만으로 나누는 raw한 구성
+   글씨는 좌측 영역(화면 1/3)에만 둔다 */
+.home {
+  --strip-cover: 220px;
+  --row-cover: 160px;
+  --gap: calc(var(--line) * 3); /* 덩어리 사이 여백 */
+  --left: calc(33.333vw - var(--gutter) * 2); /* 좌측 글씨 영역 폭 */
+  padding: 0 var(--gutter) var(--gutter);
+  color: var(--fg);
+}
+
+.home button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+
+/* ── 좌측 영역 ── */
+.home-left,
+.sec-head,
+.posts,
+.results > .sec-head {
+  max-width: var(--left);
+}
+
+.years {
+  display: flex;
+  gap: 1em;
+  max-width: var(--left);
+  margin-top: var(--gap); /* SEARCH 밑 여백 */
+}
+.years + .sec {
+  margin-top: var(--line); /* 연도 바로 아래 리스트 */
+}
+.years button:disabled {
+  visibility: hidden;
+}
+
+/* ── 검색: 선 없이 글자만. 모드는 눌렀을 때만 ── */
+.search {
+  margin-top: 0;
+}
+.search-modes {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+/* 선택된 모드만 초록 바탕 */
+.search-modes button.is-on {
+  background: var(--accent);
+}
+.search-input {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  outline: none;
+  caret-color: var(--fg);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.search-input::placeholder {
+  color: var(--fg);
+}
+.search-input:focus::placeholder {
+  color: transparent;
+}
+.search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+/* ── 섹션 ── */
+.sec,
+.results {
+  margin-top: var(--gap);
+}
+.sec-head {
+  display: flex;
+  gap: 1em;
+  margin-bottom: var(--line);
+}
+
+.album-text {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 앨범 리스트 — 같은 요소, 배치만 바뀜
+   접힘(.list): 가로로 붙어 쌓인 커버 + 밑에 글, 횡스크롤 (스크롤바 숨김)
+   펼침(.list.is-open): 세로 리스트, 좌측 글 · 우측 커버 */
+.list {
+  display: flex;
+  align-items: flex-start;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.list::-webkit-scrollbar {
+  display: none;
+}
+.item {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 var(--strip-cover);
+  width: var(--strip-cover);
+}
+.item img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  margin-bottom: calc(var(--line) / 2);
+}
+.item .album-text {
+  padding-right: 0.5em;
+}
+
+.list.is-open {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--line);
+  overflow-x: visible;
+}
+.list.is-open .item {
+  flex-direction: row-reverse; /* DOM은 커버→글 그대로, 화면에선 글 왼쪽 · 커버 오른쪽 */
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--gutter);
+  flex: none;
+  width: auto;
+}
+.list.is-open .item img {
+  width: var(--row-cover);
+  flex: 0 0 auto;
+  margin-bottom: 0;
+}
+.list.is-open .album-text {
+  max-width: var(--left);
+  padding-right: 0;
+}
+
+/* 펼침 / 검색 결과: 좌측 글, 우측 커버 — 줄 사이는 여백만 */
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--line);
+}
+.results > .sec-head {
+  margin-bottom: 0;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--gutter);
+}
+.row .album-text {
+  max-width: var(--left);
+}
+.row-cover {
+  display: block;
+  width: var(--row-cover);
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+
+/* 기획 게시물: 제목 아래 날짜 */
+.posts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--line);
+}
+.post {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 768px) {
+  .home {
+    --strip-cover: 140px;
+    --row-cover: 110px;
+    --left: 100%;
+  }
+}

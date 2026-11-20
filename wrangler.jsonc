@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "frogmusicscore",
+  "compatibility_date": "2026-10-15",
+  // /api/* 는 Worker(글·이미지·로그인), 나머지는 정적 파일
+  "main": "worker/index.js",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // /26FW 같은 주소로 바로 들어와도 index.html → React Router가 처리
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  // 글: D1 (SQL). 첫 배포 때 id 없이 두면 wrangler가 자동으로 만들어 줌
+  "d1_databases": [{ "binding": "DB", "database_name": "frogmusicscore", "migrations_dir": "migrations" }],
+  "vars": {
+    // 좋아요: 여러 사람이 IP를 나눠 쓰는 통신사망(ASN). 이 망의 IPv4는 IP 대신 브라우저마다 따로 셈
+    // 9644 SKT · 4766 KT · 17858/17853 LG U+ · 9318 SK브로드밴드 · 3786 LG데이콤
+    "LIKE_SHARED_ASNS": "9644,4766,17858,17853,9318,3786"
+  },
+  // 이미지: R2. 첫 배포 때 자동 생성 (계정에서 R2가 켜져 있어야 함)
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "frogmusicscore-media" }]
+}
