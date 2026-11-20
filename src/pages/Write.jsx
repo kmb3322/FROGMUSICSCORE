@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api, mediaUrl, shrinkImage } from '../api'
 import { useData } from '../data/store'
-import { albumSeason, allSeasons, REGIONS, seasonLabel } from '../data/seasons'
+import { albumCategory, albumSeason, allSeasons, categoriesOf, seasonLabel } from '../data/seasons'
 import LogoRow from '../components/LogoRow'
 import { imageRatio } from '../components/PostImages'
 import Ko from '../Ko'
@@ -60,6 +60,51 @@ function AutoText({ value, onChange, placeholder, onFocus, className = '' }) {
   )
 }
 
+// 점수: 숫자만 쳐도 0.0 형식으로 (84 → 8.4, 10 → 10, 100 → 10.0), 10 넘으면 10
+function formatScore(input) {
+  const v = input.replace(/[^\d.]/g, '')
+  if (v.includes('.')) {
+    const [a, b = ''] = v.split('.')
+    return `${a.slice(0, 2)}.${b.slice(0, 1)}`
+  }
+  if (v.length <= 1 || v === '10') return v
+  if (v.startsWith('10')) return `10.${v[2] || '0'}`
+  return `${v[0]}.${v[1]}`
+}
+const finishScore = (v) => {
+  const n = Number(v)
+  return v === '' || !Number.isFinite(n) ? v : Math.min(10, n).toFixed(1)
+}
+// 발매일: YYYY MM DD (공백으로 구분)
+//  - 숫자만 쳐도 자리에 맞게: 20260515 → 2026 05 15
+//  - 구분해서 치면 한 자리 월은 앞에 0: 2026.5.1 → 2026 05 1 (칸을 벗어나면 01)
+const formatDate = (input) => {
+  const lens = [4, 2, 2]
+  const out = ['', '', '']
+  let i = 0
+  const tokens = input.split(/\D+/)
+  tokens.forEach((tok, t) => {
+    for (const ch of tok) {
+      if (out[i].length >= lens[i]) i++
+      if (i > 2) return
+      out[i] += ch
+    }
+    // 이 숫자 묶음 뒤에 구분자가 있으면 월 칸을 닫음
+    const closed = t < tokens.length - 1
+    if (closed && out[i] && i === 1) {
+      out[1] = out[1].padStart(2, '0')
+      i = 2
+    } else if (closed && i === 0 && out[0].length === 4) i = 1
+  })
+  return out.filter(Boolean).join(' ')
+}
+// 칸을 벗어나면 일도 두 자리로 (2026 05 1 → 2026 05 01)
+const finishDate = (v) => {
+  const [y, m, d] = v.split(' ')
+  return d ? `${y} ${m.padStart(2, '0')} ${d.padStart(2, '0')}` : v
+}
+const dateToSave = (v) => v.replace(/\s+/g, '-') // 저장은 2026-05-15
+
 const newText = (text = '') => ({ key: crypto.randomUUID(), type: 'text', text })
 
 // 커버 주소 → 저장용 (올린 이미지면 R2 id, 사이트 기본 커버면 경로)
@@ -90,7 +135,9 @@ export default function Write() {
   )
   const [season, setSeason] = useState(upcomingSeasons()[1])
   const [customYear, setCustomYear] = useState('')
-  const [region, setRegion] = useState('kr')
+  const [category, setCategory] = useState('한국 힙합')
+  const [newCategory, setNewCategory] = useState('')
+  const categories = [...new Set([...categoriesOf(data), category])]
   const [f, setF] = useState({ artist: '', title: '', writer: '', score: '', released: '', keywords: '', body: '' })
   const set = (k) => (e) => setF((v) => ({ ...v, [k]: typeof e === 'string' ? e : e.target.value }))
 
@@ -116,14 +163,14 @@ export default function Write() {
     filled.current = editing.id
     setKind('review')
     setSeason(albumSeason(editing))
-    setRegion(editing.region || 'kr')
+    setCategory(albumCategory(editing))
     setF({
       artist: editing.artist || '',
       title: editing.title || '',
       writer: editing.writer || '',
-      score: String(editing.score ?? ''),
-      released: editing.released || '',
-      keywords: (editing.keywords || []).join(', '),
+      score: finishScore(String(editing.score ?? '')),
+      released: formatDate(editing.released || ''),
+      keywords: (editing.keywords || []).join(' '),
       body: editing.review || '',
     })
     setCover(coverFromUrl(editing.cover))
@@ -137,8 +184,11 @@ export default function Write() {
     input.multiple = multiple
     input.onchange = async () => {
       const files = [...(input.files || [])]
-      const shrunk = await Promise.all(files.map((file) => shrinkImage(file)))
-      onFiles(shrunk.map((s) => ({ ...s, url: URL.createObjectURL(s.blob), key: crypto.randomUUID(), type: 'image' })))
+      // 5MB 이하로 자동 압축. 열 수 없는 형식(일부 HEIC 등)은 빼고 알림
+      const shrunk = await Promise.all(files.map((file) => shrinkImage(file).catch(() => null)))
+      const ok = shrunk.filter(Boolean)
+      setStatus(ok.length < files.length ? `사진 ${files.length - ok.length}장 실패` : '')
+      if (ok.length) onFiles(ok.map((s) => ({ ...s, url: URL.createObjectURL(s.blob), key: crypto.randomUUID(), type: 'image' })))
     }
     input.click()
   }
@@ -195,7 +245,7 @@ export default function Write() {
   const snapshot = (c, sideBlocks) => ({
     kind,
     season,
-    region,
+    category,
     f,
     cover: c?.media || c?.path ? { media: c.media, path: c.path } : null,
     side: sideBlocks.map((b) => (b.type === 'image' ? { type: 'image', media: b.media, w: b.w, h: b.h } : { type: 'text', text: b.text })),
@@ -223,8 +273,8 @@ export default function Write() {
     setDraftId(d.id)
     setKind(d.kind || 'review')
     setSeason(d.season || upcomingSeasons()[1])
-    setRegion(d.region || 'kr')
-    setF((v) => ({ ...v, ...(d.f || {}) }))
+    setCategory(d.category || albumCategory(d))
+    setF((v) => ({ ...v, ...(d.f || {}), released: formatDate(d.f?.released || '') }))
     setCover(d.cover ? { ...d.cover, url: coverUrl(d.cover) } : null)
     const blocks = (d.side || []).map((b) =>
       b.type === 'image' ? { ...b, key: crypto.randomUUID(), url: mediaUrl(b.media) } : newText(b.text),
@@ -253,7 +303,7 @@ export default function Write() {
     const score = Number(f.score)
     if (missing.length) return setStatus(`빈 칸 — ${missing.join(', ')}`)
     if (kind === 'review' && !(score >= 0 && score <= 10)) return setStatus('점수 0–10')
-    if (kind === 'review' && f.released && !/^\d{4}-\d{2}-\d{2}$/.test(f.released)) return setStatus('발매일 YYYY-MM-DD')
+    if (kind === 'review' && f.released && !/^\d{4} \d{2} \d{2}$/.test(f.released)) return setStatus('발매일 YYYY MM DD')
 
     setBusy(true)
     try {
@@ -262,13 +312,13 @@ export default function Write() {
       const review = {
         kind,
         season,
-        region,
+        category,
         artist: f.artist,
         title: f.title,
         writer: f.writer,
         score,
-        released: f.released,
-        keywords: f.keywords.split(',').map((k) => k.trim()).filter(Boolean),
+        released: dateToSave(f.released),
+        keywords: f.keywords.split(/[\s,]+/).filter(Boolean), // 공백(또는 쉼표)으로 구분
         cover: up.cover?.media || '',
         coverPath: up.cover?.path || '',
         body: f.body,
@@ -351,7 +401,30 @@ export default function Write() {
           <button type="button" onClick={() => chooseCustomSeason('SS')}>S/S</button>
           <button type="button" onClick={() => chooseCustomSeason('FW')}>F/W</button>
         </div>
-        {kind === 'review' && <Choice options={REGIONS} value={region} onChange={setRegion} />}
+        {kind === 'review' && (
+          <div className="choice">
+            {categories.map((c) => (
+              <button key={c} type="button" className={category === c ? 'is-on' : ''} onClick={() => setCategory(c)}>
+                <Ko>{c}</Ko>
+              </button>
+            ))}
+            {/* 새 카테고리: 이름을 쓰고 엔터 */}
+            <input
+              className="field field-category"
+              value={newCategory}
+              onChange={(e) => setNewCategory(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter' || e.nativeEvent.isComposing) return
+                e.preventDefault()
+                const name = newCategory.trim().slice(0, 30)
+                if (name) setCategory(name)
+                setNewCategory('')
+              }}
+              placeholder="+ 카테고리"
+              aria-label="새 카테고리"
+            />
+          </div>
+        )}
       </div>
 
       {/* 글 정보 */}
@@ -361,8 +434,22 @@ export default function Write() {
             <input className="field" value={f.artist} onChange={set('artist')} placeholder="아티스트" />
             <input className="field" value={f.title} onChange={set('title')} placeholder="앨범" />
             <input className="field" value={f.writer} onChange={set('writer')} placeholder="작성자" />
-            <input className="field" value={f.score} onChange={set('score')} placeholder="점수" inputMode="decimal" />
-            <input className="field" value={f.released} onChange={set('released')} placeholder="발매일 YYYY-MM-DD" />
+            <input
+              className="field"
+              value={f.score}
+              onChange={(e) => setF((v) => ({ ...v, score: formatScore(e.target.value) }))}
+              onBlur={() => setF((v) => ({ ...v, score: finishScore(v.score) }))}
+              placeholder="점수 0.0"
+              inputMode="decimal"
+            />
+            <input
+              className="field"
+              value={f.released}
+              onChange={(e) => setF((v) => ({ ...v, released: formatDate(e.target.value) }))}
+              onBlur={() => setF((v) => ({ ...v, released: finishDate(v.released) }))}
+              placeholder="발매일 YYYY MM DD"
+              inputMode="numeric"
+            />
             <input className="field" value={f.keywords} onChange={set('keywords')} placeholder="키워드" />
           </>
         ) : (

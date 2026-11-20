@@ -12,7 +12,7 @@
 // 비밀번호: 시크릿 ADMIN_PASSWORD  (로컬은 .dev.vars)
 
 const WEEK = 60 * 60 * 24 * 7
-const MAX_IMAGE = 15 * 1024 * 1024
+const MAX_IMAGE = 5 * 1024 * 1024 // 사진 한 장 5MB (브라우저에서 미리 압축해서 올림)
 const MAX_DRAFT = 512 * 1024
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const SEASON = /^\d{2}(SS|FW)$/
@@ -253,18 +253,20 @@ function validate(p, keep = {}) {
     const coverPath = /^covers\/[\w.-]+$/.test(p.coverPath || '') ? p.coverPath : ''
     if (!artist || !title || (!cover && !coverPath)) return null
     if (!Number.isFinite(score) || score < 0 || score > 10) return null
-    if (!['kr', 'us'].includes(p.region)) return null
+    // 카테고리: 이름 그대로 (예전 데이터의 region: kr/us 도 받아 줌)
+    const category = line(p.category, 30) || { kr: '한국 힙합', us: '미국 힙합' }[p.region] || ''
+    if (!category) return null
     return {
       kind: 'review',
       id,
       season: p.season,
-      region: p.region,
+      category,
       artist,
       title,
       writer,
       score: Math.round(score * 10) / 10,
       released: DATE.test(p.released || '') ? p.released : '',
-      keywords: Array.isArray(p.keywords) ? p.keywords.map((k) => line(k, 50)).filter(Boolean).slice(0, 20) : [],
+      keywords: Array.isArray(p.keywords) ? p.keywords.map((k) => line(k, 50)).filter(Boolean).slice(0, 30) : [],
       cover,
       coverPath,
       body,

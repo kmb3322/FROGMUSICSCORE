@@ -15,6 +15,7 @@ function fromServer(posts) {
         id: p.id,
         season: p.season,
         region: p.region,
+        category: p.category,
         artist: p.artist,
         title: p.title,
         released: p.released || '',

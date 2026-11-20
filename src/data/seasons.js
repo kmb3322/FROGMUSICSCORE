@@ -12,18 +12,22 @@ export const isSeason = (code) => /^\d{2}(SS|FW)$/.test(code || '')
 // 앨범의 시즌: 글쓰기에서 고른 시즌이 있으면 그것, 없으면 발매일로
 export const albumSeason = (x) => x.season || seasonOf(x.released)
 
-export const REGIONS = [
-  { key: 'kr', label: '한국 힙합' },
-  { key: 'us', label: '미국 힙합' },
-]
+// 카테고리 (메인 리스트 · 글쓰기 선택지 순서). 여기에 이름을 더하면 바로 생김.
+// 글쓰기 화면에서 새 이름을 직접 입력해도 되고, 글이 있는 카테고리만 메인에 섹션으로 나옴
+export const CATEGORIES = ['한국 힙합', '미국 힙합', '한국 R&B', '팝', '록 · 밴드', '일렉트로닉', '재즈']
+const LEGACY = { kr: '한국 힙합', us: '미국 힙합' } // 예전 데이터(region: kr/us)
+export const albumCategory = (x) => x.category || LEGACY[x.region] || '기타'
+
+// 정해 둔 카테고리 + 글에서 새로 쓴 카테고리
+export const categoriesOf = (data) => [...new Set([...CATEGORIES, ...data.albums.map(albumCategory)])]
 
 const sortKey = (x) => x.released || (x.date || '').replaceAll('.', '-')
 const byNewest = (x, y) => sortKey(y).localeCompare(sortKey(x))
 
-// 시즌 안 앨범 순서: 한국 → 미국, 각각 최신순 (메인 리스트와 같은 순서)
+// 시즌 안 앨범 순서: 카테고리 순, 각각 최신순 (메인 리스트와 같은 순서)
 export function seasonAlbums(data, code) {
-  return REGIONS.flatMap((r) =>
-    data.albums.filter((x) => x.region === r.key && albumSeason(x) === code).sort(byNewest),
+  return categoriesOf(data).flatMap((c) =>
+    data.albums.filter((x) => albumCategory(x) === c && albumSeason(x) === code).sort(byNewest),
   )
 }
 
@@ -36,18 +40,20 @@ export function allSeasons(data) {
 // 글이 있는 연도 (최신순)
 export const yearsOf = (data) => [...new Set(allSeasons(data).map(seasonYear))].sort((p, q) => q - p)
 
-// 메인 리스트: 연도 → F/W 지역별, F/W 기획, S/S 지역별, S/S 기획
+// 메인 리스트: 연도 → F/W 카테고리별, F/W 기획, S/S 카테고리별, S/S 기획
 export function sectionsFor(data, year) {
   const yy = String(year).slice(2)
   return ['FW', 'SS'].flatMap((half) => {
     const code = `${yy}${half}`
-    const out = REGIONS.map((r) => ({
-      type: 'albums',
-      key: `${code}-${r.key}`,
-      season: code,
-      title: `${seasonLabel(code)} ${r.label}`,
-      albums: data.albums.filter((x) => x.region === r.key && albumSeason(x) === code).sort(byNewest),
-    })).filter((s) => s.albums.length)
+    const out = categoriesOf(data)
+      .map((c) => ({
+        type: 'albums',
+        key: `${code}-${c}`,
+        season: code,
+        title: `${seasonLabel(code)} ${c}`,
+        albums: data.albums.filter((x) => albumCategory(x) === c && albumSeason(x) === code).sort(byNewest),
+      }))
+      .filter((s) => s.albums.length)
     const posts = data.features.filter((f) => f.season === code).sort(byNewest)
     if (posts.length) out.push({ type: 'features', key: `${code}-features`, season: code, title: `${seasonLabel(code)} 기획`, posts })
     return out

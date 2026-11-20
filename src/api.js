@@ -31,17 +31,39 @@ export const api = {
   uploadImage: (blob) => call('/media', { method: 'POST', headers: { 'content-type': blob.type }, body: blob }),
 }
 
-// 업로드 전에 브라우저에서 줄이기: 긴 변 1600px, WebP
+// 사진 용량 제한 (서버도 같은 값으로 막음)
+export const MAX_UPLOAD = 5 * 1024 * 1024
+
+const encode = (canvas, type, quality) => new Promise((r) => canvas.toBlob(r, type, quality))
+
+// 업로드 전에 브라우저에서 줄이기: 긴 변 1600px, WebP(안 되면 JPEG).
+// 5MB가 넘으면 화질 → 크기 순으로 낮춰 가며 5MB 이하로 맞춤
 export async function shrinkImage(file, max = 1600) {
-  const bitmap = await createImageBitmap(file)
-  const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height))
-  const w = Math.round(bitmap.width * scale)
-  const h = Math.round(bitmap.height * scale)
-  const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
-  canvas.getContext('2d').drawImage(bitmap, 0, 0, w, h)
-  bitmap.close?.()
-  const blob = await new Promise((r) => canvas.toBlob(r, 'image/webp', 0.86))
-  return { blob: blob || file, w, h }
+  const bitmap = await createImageBitmap(file) // 못 여는 형식이면 여기서 오류
+  let side = max
+  let quality = 0.86
+  let type = 'image/webp'
+  try {
+    for (let i = 0; i < 10; i++) {
+      const scale = Math.min(1, side / Math.max(bitmap.width, bitmap.height))
+      const w = Math.round(bitmap.width * scale)
+      const h = Math.round(bitmap.height * scale)
+      const canvas = document.createElement('canvas')
+      canvas.width = w
+      canvas.height = h
+      canvas.getContext('2d').drawImage(bitmap, 0, 0, w, h)
+      let blob = await encode(canvas, type, quality)
+      // WebP로 못 만드는 브라우저(일부 Safari)는 PNG가 나옴 → JPEG로
+      if (blob && blob.type !== type) {
+        type = 'image/jpeg'
+        blob = await encode(canvas, type, quality)
+      }
+      if (blob && blob.size <= MAX_UPLOAD) return { blob, w, h }
+      if (quality > 0.6) quality -= 0.1
+      else side = Math.round(side * 0.8)
+    }
+  } finally {
+    bitmap.close?.()
+  }
+  throw new Error('too_large')
 }

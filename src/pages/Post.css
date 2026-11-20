@@ -211,3 +211,8 @@
 .delete-confirm {
   flex: 0 0 8em;
 }
+
+.field-category {
+  display: inline-block;
+  width: 7em;
+}
