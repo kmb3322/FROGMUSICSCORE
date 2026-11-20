@@ -4,19 +4,19 @@
 //       + 하단 왼쪽 로고 (커버 색을 번진 보색으로 비춤)
 //  2장~: 왼쪽 글 칸을 캡처한 듯한 화면(로고 없이). 글이 길면 잘라서 여러 장
 
-const W = 1080
-const H = 1440
-const PAD = 64
-const SIZE = 40 // 글자 크기 (사이트의 원사이즈를 카드 크기에 맞게 키움)
-const LINE = Math.round(SIZE * 1.15)
-const BG = '#f0f0f0'
-const FG = '#1a1a1a'
-const ACCENT = '#61bb46'
+export const W = 1080
+export const H = 1440
+export const PAD = 64
+export const SIZE = 40 // 글자 크기 (사이트의 원사이즈를 카드 크기에 맞게 키움)
+export const LINE = Math.round(SIZE * 1.15)
+export const BG = '#f0f0f0'
+export const FG = '#1a1a1a'
+export const ACCENT = '#61bb46'
 const FAMILY = '"HelveticaLocal", Roboto, "Pretendard Variable", Pretendard, sans-serif'
-const font = (px) => `700 ${px}px ${FAMILY}`
-const LOGO = ['FROG', 'MUSIC SCORE', 'KOREA']
+export const font = (px) => `700 ${px}px ${FAMILY}`
+export const LOGO = ['FROG', 'MUSIC SCORE', 'KOREA']
 
-const loadImage = (src) =>
+export const loadImage = (src) =>
   new Promise((resolve, reject) => {
     const img = new Image()
     img.decoding = 'async'
@@ -25,7 +25,7 @@ const loadImage = (src) =>
     img.src = src
   })
 
-function canvas() {
+export function canvas() {
   const c = document.createElement('canvas')
   c.width = W
   c.height = H
@@ -37,10 +37,10 @@ function canvas() {
   return [c, ctx]
 }
 
-const toBlob = (c) => new Promise((r) => c.toBlob(r, 'image/png'))
+export const toBlob = (c) => new Promise((r) => c.toBlob(r, 'image/png'))
 
 // 공백 단위로 줄바꿈 (한글도 단어 단위 — keep-all), 너무 긴 단어는 글자 단위로
-function wrap(ctx, text, max) {
+export function wrap(ctx, text, max) {
   const out = []
   for (const para of text.split('\n')) {
     if (!para.trim()) {
@@ -77,14 +77,14 @@ function wrap(ctx, text, max) {
   return out
 }
 
-function drawLogo(ctx, x, y, color = FG, px = SIZE) {
+export function drawLogo(ctx, x, y, color = FG, px = SIZE) {
   ctx.fillStyle = color
   ctx.font = font(px)
   LOGO.forEach((t, i) => ctx.fillText(t, x, y + i * Math.round(px * 1.15)))
 }
 
 // 커버 → 흐린 보색 그라데이션을 채운 글씨 레이어 (카드 크기)
-function tintedText(img, lines, x, y, px, lh, top) {
+export function tintedText(img, lines, x, y, px, lh, top) {
   // 1) 커버를 아주 작게(48px) 줄인 색 지도 — 다시 크게 펼치면 부드럽게 번짐.
   //    커버와 1:1로 맞춰 그려서 글자마다 바로 그 아래 커버 자리의 색을 씀
   const n = 48

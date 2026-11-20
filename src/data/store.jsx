@@ -34,7 +34,11 @@ function fromServer(posts) {
         writer: p.writer,
         date: p.date,
         body: p.body,
-        side: (p.side || []).map((b) => (b.type === 'image' ? { type: 'image', src: mediaUrl(b.media), w: b.w, h: b.h } : b)),
+        side: (p.side || []).map((b) =>
+          b.type === 'image'
+            ? { type: 'image', src: b.media ? mediaUrl(b.media) : `${import.meta.env.BASE_URL}${b.path}`, w: b.w, h: b.h }
+            : b,
+        ),
       })
     }
   }

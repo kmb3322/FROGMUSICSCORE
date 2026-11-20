@@ -120,7 +120,9 @@ export default function Write() {
   // ?edit=<id>: 리뷰 수정 (리뷰의 Share 버튼 10번 → 비밀번호 → 여기로)
   const [params] = useSearchParams()
   const editId = params.get('edit')
-  const editing = editId ? data.albums.find((x) => x.id === editId) : null
+  // 수정할 글: 리뷰 또는 기획 게시물
+  const editing = editId ? data.albums.find((x) => x.id === editId) || data.features.find((x) => x.id === editId) : null
+  const editingFeature = !!editing && data.features.includes(editing)
 
   useEffect(() => {
     api.me().then(
@@ -156,11 +158,23 @@ export default function Write() {
     if (authed) loadDrafts()
   }, [authed])
 
-  // 수정할 리뷰 내용 채우기 (한 번만) — 서버의 최신 수정본을 다 불러온 뒤에
+  // 수정할 글 내용 채우기 (한 번만) — 서버의 최신 수정본을 다 불러온 뒤에
   const filled = useRef(null)
   useEffect(() => {
     if (!authed || !data.loaded || !editing || filled.current === editing.id) return
     filled.current = editing.id
+    if (editingFeature) {
+      setKind('feature')
+      setSeason(editing.season)
+      setF((v) => ({ ...v, title: editing.title || '', writer: editing.writer || '', body: editing.body || '' }))
+      const blocks = (editing.side || []).map((b) =>
+        b.type === 'image'
+          ? { ...coverFromUrl(b.src), type: 'image', w: b.w, h: b.h, key: crypto.randomUUID() }
+          : newText(b.text),
+      )
+      setSide(blocks.length ? blocks : [newText()])
+      return
+    }
     setKind('review')
     setSeason(albumSeason(editing))
     setCategory(albumCategory(editing))
@@ -174,7 +188,7 @@ export default function Write() {
       body: editing.review || '',
     })
     setCover(coverFromUrl(editing.cover))
-  }, [authed, data.loaded, editing])
+  }, [authed, data.loaded, editing, editingFeature])
 
   // 사진 고르기 (브라우저에서 줄인 뒤 미리보기)
   const pick = (multiple, onFiles) => {
@@ -230,7 +244,7 @@ export default function Write() {
     }
     const next = []
     for (const b of side) {
-      if (b.type === 'image' && !b.media) {
+      if (b.type === 'image' && b.blob && !b.media) {
         next.push({ ...b, media: (await api.uploadImage(b.blob)).id })
       } else next.push(b)
     }
@@ -244,7 +258,9 @@ export default function Write() {
     category,
     f,
     cover: c?.media || c?.path ? { media: c.media, path: c.path } : null,
-    side: sideBlocks.map((b) => (b.type === 'image' ? { type: 'image', media: b.media, w: b.w, h: b.h } : { type: 'text', text: b.text })),
+    side: sideBlocks.map((b) =>
+      b.type === 'image' ? { type: 'image', media: b.media, path: b.path, w: b.w, h: b.h } : { type: 'text', text: b.text },
+    ),
   })
 
   const saveDraft = async () => {
@@ -273,7 +289,7 @@ export default function Write() {
     setF((v) => ({ ...v, ...(d.f || {}), released: formatDate(d.f?.released || '') }))
     setCover(d.cover ? { ...d.cover, url: coverUrl(d.cover) } : null)
     const blocks = (d.side || []).map((b) =>
-      b.type === 'image' ? { ...b, key: crypto.randomUUID(), url: mediaUrl(b.media) } : newText(b.text),
+      b.type === 'image' ? { ...b, key: crypto.randomUUID(), url: coverUrl(b) } : newText(b.text),
     )
     setSide(blocks.length ? blocks : [newText()])
     setStatus('')
@@ -326,11 +342,13 @@ export default function Write() {
         coverPath: up.cover?.path || '',
         body: f.body,
       }
+      const payload =
+        kind === 'review'
+          ? review
+          : { kind, season, title: f.title, writer: f.writer, body: f.body, side: snapshot(null, up.side).side }
       const { post } = editing
-        ? await api.updatePost(editing.id, { ...review, date: editing.date, password })
-        : kind === 'review'
-          ? await api.createPost(review)
-          : await api.createPost({ kind, season, title: f.title, writer: f.writer, body: f.body, side: snapshot(null, up.side).side })
+        ? await api.updatePost(editing.id, { ...payload, date: editing.date, password })
+        : await api.createPost(payload)
       if (draftId) await api.deleteDraft(draftId).catch(() => {}) // 올린 글의 임시저장은 정리
       await data.reload()
       navigate(kind === 'review' ? `/${post.season}?album=${post.id}` : `/post/${post.id}`)
@@ -378,7 +396,7 @@ export default function Write() {
         {editing ? (
           <div className="choice">
             <span className="is-on-text">
-              <Ko>{`수정 — ${editing.artist} / ${editing.title}`}</Ko>
+              <Ko>{editingFeature ? `수정 — ${editing.title}` : `수정 — ${editing.artist} / ${editing.title}`}</Ko>
             </span>
           </div>
         ) : (

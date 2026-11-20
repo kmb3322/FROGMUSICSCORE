@@ -98,7 +98,7 @@
 
 /* 앨범 리스트 — 같은 요소, 배치만 바뀜
    접힘(.list): 가로로 붙어 쌓인 커버 + 밑에 글, 횡스크롤 (스크롤바 숨김)
-   펼침(.list.is-open): 세로 리스트, 좌측 글 · 우측 커버 */
+   펼침(.list.is-open): 세로 리스트, 좌측 커버 · 그 오른쪽에 바로 붙여 위에서부터 글 */
 .list {
   display: flex;
   align-items: flex-start;
@@ -133,10 +133,10 @@
   overflow-x: visible;
 }
 .list.is-open .item {
-  flex-direction: row-reverse; /* DOM은 커버→글 그대로, 화면에선 글 왼쪽 · 커버 오른쪽 */
-  justify-content: space-between;
+  flex-direction: row; /* 커버 → 글 (DOM 순서 그대로) */
+  justify-content: flex-start;
   align-items: flex-start;
-  gap: var(--gutter);
+  gap: 0.5em;
   flex: none;
   width: auto;
 }

@@ -6,6 +6,7 @@ import CoverStack from '../components/CoverStack'
 import ColorFlow from '../components/ColorFlow'
 import usePager from '../usePager'
 import ReviewActions, { ShareCards } from '../components/ReviewActions'
+import { makeCards } from '../share/cards'
 import Ko from '../Ko'
 import '../App.css'
 
@@ -133,9 +134,10 @@ export default function Season({ code, startId }) {
                 <span>{album.date}</span>
               </p>
               <ReviewActions
-                album={album}
+                id={album.id}
                 url={`${window.location.origin}${import.meta.env.BASE_URL}${code}?album=${album.id}`}
-                seasonText={`${seasonLabel(code)}   ${album.date}`}
+                shareTitle={`${album.artist} — ${album.title}`}
+                makeImages={() => makeCards(album, `${seasonLabel(code)}   ${album.date}`)}
                 onCards={setCards}
               />
             </div>

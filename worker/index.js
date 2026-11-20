@@ -292,11 +292,15 @@ function validate(p, keep = {}) {
     // 우측 칸: 글(엔터 포함)과 사진이 위에서부터 차례로 쌓이는 독립된 흐름
     const side = (Array.isArray(p.side) ? p.side : []).slice(0, 200).flatMap((b) => {
       if (b?.type === 'text') return [{ type: 'text', text: str(b.text, 10000) }]
-      if (b?.type === 'image' && UUID.test(b.media || ''))
+      // 사진: 올린 이미지(R2 id) 또는 사이트에 들어 있는 기본 이미지 경로(covers/...)
+      const media = UUID.test(b?.media || '') ? b.media : ''
+      const path = /^covers\/[\w.-]+$/.test(b?.path || '') ? b.path : ''
+      if (b?.type === 'image' && (media || path))
         return [
           {
             type: 'image',
-            media: b.media,
+            media,
+            path,
             w: Math.max(1, Math.round(Number(b.w) || 1)),
             h: Math.max(1, Math.round(Number(b.h) || 1)),
           },

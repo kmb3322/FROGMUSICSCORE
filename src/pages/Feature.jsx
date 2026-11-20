@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import { useData } from '../data/store'
 import { seasonLabel } from '../data/seasons'
 import LogoRow from '../components/LogoRow'
 import SideColumn, { asLines } from '../components/PostImages'
+import ReviewActions, { ShareCards } from '../components/ReviewActions'
+import { makeFeatureCards } from '../share/featureCards'
 import Ko from '../Ko'
 import './Post.css'
 
@@ -11,10 +14,12 @@ export default function Feature() {
   const { id } = useParams()
   const data = useData()
   const post = data.features.find((f) => f.id === id)
+  const [cards, setCards] = useState(null) // Share → 사진: 만든 카드들
   if (!post) return data.loaded ? <Navigate to="/" replace /> : null
 
   return (
     <div className="post-page">
+      {cards && <ShareCards blobs={cards} name={`frogmusicscore-${post.id}`} onClose={() => setCards(null)} />}
       <LogoRow />
 
       <article>
@@ -34,6 +39,13 @@ export default function Feature() {
           <span>{seasonLabel(post.season)}</span>
           <span>{post.date}</span>
         </p>
+        <ReviewActions
+          id={post.id}
+          url={`${window.location.origin}${import.meta.env.BASE_URL}post/${post.id}`}
+          shareTitle={post.title}
+          makeImages={() => makeFeatureCards(post, `${seasonLabel(post.season)}   ${post.date}`)}
+          onCards={setCards}
+        />
       </article>
     </div>
   )

@@ -1,15 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
-import { makeCards } from '../share/cards'
 import Ko from '../Ko'
 
-// 리뷰를 펼쳤을 때: Likes · Share
-// Likes: 로그인 없이 누구나. 한 사람은 리뷰마다 하루 한 번 (서버에서 제한) — 이미 눌렀으면 초록으로만
-// Share: 링크 / 사진(인스타용 3:4 카드). 빠르게 10번 누르면 비밀번호 → 이 리뷰 수정
+// 리뷰·기획 공통: Likes · Share
+// Likes: 로그인 없이 누구나. 한 사람은 글마다 하루 한 번 (서버에서 제한) — 이미 눌렀으면 초록으로만
+// Share: 링크 / 사진(인스타용 3:4 카드 — makeImages). 빠르게 10번 누르면 비밀번호 → 이 글 수정·삭제
 const SECRET_CLICKS = 10
 const CLICK_GAP = 1200
-export default function ReviewActions({ album, url, seasonText, onCards }) {
+export default function ReviewActions({ id, url, shareTitle, makeImages, onCards }) {
   const [likes, setLikes] = useState({ count: null, liked: false })
   const [note, setNote] = useState('')
   const [menu, setMenu] = useState(false)
@@ -22,7 +21,7 @@ export default function ReviewActions({ album, url, seasonText, onCards }) {
     clicks.current.t = now
     if (clicks.current.n >= SECRET_CLICKS) {
       clicks.current.n = 0
-      return navigate(`/login?next=${encodeURIComponent(`/write?edit=${album.id}`)}`)
+      return navigate(`/login?next=${encodeURIComponent(`/write?edit=${id}`)}`)
     }
     setMenu((v) => !v)
   }
@@ -32,14 +31,14 @@ export default function ReviewActions({ album, url, seasonText, onCards }) {
     setLikes({ count: null, liked: false })
     setNote('')
     setMenu(false)
-    api.likes(album.id).then(
+    api.likes(id).then(
       (r) => alive && setLikes(r),
       () => {},
     )
     return () => {
       alive = false
     }
-  }, [album.id])
+  }, [id])
 
   const flash = (text) => {
     setNote(text)
@@ -50,15 +49,15 @@ export default function ReviewActions({ album, url, seasonText, onCards }) {
     if (likes.liked) return // 이미 눌렀으면 초록 그대로
     setLikes((v) => ({ count: (v.count || 0) + 1, liked: true })) // 바로 반영
     try {
-      setLikes(await api.like(album.id))
+      setLikes(await api.like(id))
     } catch {
-      api.likes(album.id).then(setLikes, () => {})
+      api.likes(id).then(setLikes, () => {})
     }
   }
 
   const shareLink = async () => {
     setMenu(false)
-    const data = { title: `${album.artist} — ${album.title} | FROG MUSIC SCORE`, url }
+    const data = { title: `${shareTitle} | FROG MUSIC SCORE`, url }
     try {
       if (navigator.share) return await navigator.share(data)
     } catch (err) {
@@ -76,7 +75,7 @@ export default function ReviewActions({ album, url, seasonText, onCards }) {
     setMenu(false)
     setBusy(true)
     try {
-      onCards(await makeCards(album, seasonText))
+      onCards(await makeImages())
       setNote('')
     } catch {
       flash('실패')

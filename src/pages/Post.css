@@ -216,3 +216,11 @@
   display: inline-block;
   width: 7em;
 }
+
+/* 기획 게시물 Likes · Share (반전 없는 화면이라 초록 그대로) */
+.post-page .review-actions {
+  max-width: var(--left);
+}
+.post-page .review-actions button.is-on {
+  background: var(--accent);
+}
