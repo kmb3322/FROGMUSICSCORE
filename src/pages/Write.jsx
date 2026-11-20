@@ -38,14 +38,15 @@ const Choice = ({ options, value, onChange }) => (
 )
 
 // 내용에 맞춰 높이가 늘어나는 입력칸
-function AutoText({ value, onChange, placeholder, onFocus, className = '' }) {
-  const ref = useRef(null)
+function AutoText({ value, onChange, placeholder, onFocus, className = '', textRef }) {
+  const local = useRef(null)
+  const ref = textRef || local
   useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
     el.style.height = '0px'
     el.style.height = `${el.scrollHeight}px`
-  }, [value])
+  }, [value, ref])
   return (
     <textarea
       ref={ref}
@@ -169,7 +170,7 @@ export default function Write() {
       setF((v) => ({ ...v, title: editing.title || '', writer: editing.writer || '', body: editing.body || '' }))
       const blocks = (editing.side || []).map((b) =>
         b.type === 'image'
-          ? { ...coverFromUrl(b.src), type: 'image', w: b.w, h: b.h, key: crypto.randomUUID() }
+          ? { ...coverFromUrl(b.src), type: 'image', w: b.w, h: b.h, anchor: b.anchor, key: crypto.randomUUID() }
           : newText(b.text),
       )
       setSide(blocks.length ? blocks : [newText()])
@@ -228,6 +229,31 @@ export default function Write() {
       return [...list.slice(0, i - 1), merged, ...list.slice(i + 2)]
     })
 
+  // 본문을 고치면, 고친 자리보다 뒤에 지정된 글 영역 위치도 같이 밀고 당김
+  const bodyRef = useRef(null)
+  const setBody = (text) => {
+    const old = f.body
+    let p = 0
+    while (p < old.length && p < text.length && old[p] === text[p]) p++
+    const delta = text.length - old.length
+    if (delta)
+      setSide((list) =>
+        list.map((b) => (b.type === 'image' && Number.isInteger(b.anchor) && b.anchor > p ? { ...b, anchor: Math.max(p, b.anchor + delta) } : b)),
+      )
+    setF((v) => ({ ...v, body: text }))
+  }
+  // 사진의 글 영역 지정: 본문에서 커서가 있던(또는 선택한) 위치부터
+  const assignText = (key) => {
+    const pos = bodyRef.current ? bodyRef.current.selectionStart : 0
+    setSide((list) => list.map((b) => (b.key === key ? { ...b, anchor: pos } : b)))
+  }
+  const clearText = (key) =>
+    setSide((list) => list.map((b) => (b.key === key ? (({ anchor, ...rest }) => rest)(b) : b)))
+  const snippet = (at) => {
+    const t = f.body.slice(at).replace(/\s+/g, ' ').trim()
+    return t.length > 24 ? `${t.slice(0, 24)}…` : t || '—'
+  }
+
   const setSideText = (key) => (text) => setSide((list) => list.map((b) => (b.key === key ? { ...b, text } : b)))
 
   const chooseCustomSeason = (half) => {
@@ -259,7 +285,9 @@ export default function Write() {
     f,
     cover: c?.media || c?.path ? { media: c.media, path: c.path } : null,
     side: sideBlocks.map((b) =>
-      b.type === 'image' ? { type: 'image', media: b.media, path: b.path, w: b.w, h: b.h } : { type: 'text', text: b.text },
+      b.type === 'image'
+        ? { type: 'image', media: b.media, path: b.path, w: b.w, h: b.h, anchor: b.anchor }
+        : { type: 'text', text: b.text },
     ),
   })
 
@@ -485,7 +513,12 @@ export default function Write() {
       {/* 본문 + 우측 칸 */}
       <div className="post-main">
         <div className="post-body">
-          <AutoText value={f.body} onChange={set('body')} placeholder={kind === 'review' ? '리뷰' : '본문'} />
+          <AutoText
+            textRef={bodyRef}
+            value={f.body}
+            onChange={setBody}
+            placeholder={kind === 'review' ? '리뷰' : '본문'}
+          />
         </div>
 
         {kind === 'review' ? (
@@ -501,11 +534,29 @@ export default function Write() {
             </button>
             {side.map((b, i) =>
               b.type === 'image' ? (
-                <div key={b.key} className="write-img" style={{ aspectRatio: imageRatio(b) }}>
-                  <img src={b.url} alt="" draggable="false" />
-                  <button type="button" onClick={() => removeImage(b.key)}>
-                    <Ko>삭제</Ko>
-                  </button>
+                <div key={b.key}>
+                  <div className="write-img" style={{ aspectRatio: imageRatio(b) }}>
+                    <img src={b.url} alt="" draggable="false" />
+                    <div className="write-img-tools">
+                      <button type="button" onClick={() => removeImage(b.key)}>
+                        <Ko>삭제</Ko>
+                      </button>
+                      {/* 본문에서 커서를 둔(선택한) 위치부터 이 사진의 글 영역 */}
+                      <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => assignText(b.key)}>
+                        <Ko>글 지정</Ko>
+                      </button>
+                      {Number.isInteger(b.anchor) && (
+                        <button type="button" onClick={() => clearText(b.key)}>
+                          <Ko>해제</Ko>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {Number.isInteger(b.anchor) && (
+                    <div className="write-anchor">
+                      <Ko>{`「${snippet(b.anchor)}」`}</Ko>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <AutoText

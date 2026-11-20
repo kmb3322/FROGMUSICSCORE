@@ -2,7 +2,8 @@
 //  1장: 상단 제목·작성자, 하단 1:1 첫 사진(그라데이션) + 보색 로고 — 리뷰 카드와 같은 틀, 평점 없음
 //  2장~: 사진 한 장을 카드 두 장이 나눠 가짐 (가로 1080px 사진이 두 카드의 경계에 걸침)
 //        앞 카드: 왼쪽 2/3 글 · 오른쪽 1/3 사진 앞부분 / 뒤 카드: 왼쪽 2/3 사진 나머지 · 오른쪽 1/3 글
-//  - 사진은 최대 10장. 사이트 화면에서 그 사진 옆에 있던 본문 구간을 그 사진의 두 카드에 넣음
+//  - 사진은 최대 10장. 글쓰기에서 사진마다 지정한 본문 영역을, 지정이 없으면 사이트 화면에서
+//    그 사진 옆에 있던 본문 구간을 그 사진의 두 카드에 넣음
 //  - 사진이 있는 카드의 글은 사진의 위아래 범위 안에서만 (시작·끝 모두)
 //  - 글이 두 카드에 다 안 들어가면 그 뒤에 글만 있는 카드를 이어 붙임
 
@@ -82,8 +83,11 @@ function anchors(post, photos) {
   for (const b of post.side || []) {
     if (b.type === 'image') {
       if (photos.includes(b)) {
-        const idx = Math.floor(y / SITE.line)
-        out.set(b, idx < body.length ? body[idx].start : (post.body || '').length)
+        if (Number.isInteger(b.anchor)) out.set(b, Math.min(b.anchor, (post.body || '').length)) // 글쓰기에서 지정한 영역
+        else {
+          const idx = Math.floor(y / SITE.line)
+          out.set(b, idx < body.length ? body[idx].start : (post.body || '').length)
+        }
       }
       y += photoHeight(b, SITE.side)
     } else {
@@ -194,10 +198,14 @@ export async function makeFeatureCards(post, seasonText) {
     return cards.slice(0, MAX_CARDS)
   }
 
-  // 사진마다 그 옆에 있던 본문 구간 (첫 사진 쌍은 본문 처음부터)
+  // 사진마다 그 옆에 있던(또는 지정한) 본문 구간.
+  // 첫 사진 쌍: 글 영역을 지정했으면 그 위치부터 — 그 앞 글(표지 사진의 영역)은 표지 바로 뒤 글 카드로.
+  //            지정 안 했으면 본문 처음부터 (자동 배치)
   const at = anchors(post, pairs)
-  let prev = 0
-  const starts = pairs.map((p, i) => (prev = i === 0 ? 0 : Math.max(prev, at.get(p) ?? prev)))
+  const firstStart = Number.isInteger(pairs[0].anchor) ? Math.min(pairs[0].anchor, body.length) : 0
+  if (firstStart > 0 && body.slice(0, firstStart).trim()) cards.push(...(await textOnly(body.slice(0, firstStart))))
+  let prev = firstStart
+  const starts = pairs.map((p, i) => (prev = i === 0 ? firstStart : Math.max(prev, at.get(p) ?? prev)))
   for (const [i, photo] of pairs.entries()) {
     const end = i + 1 < pairs.length ? starts[i + 1] : body.length
     let text = body.slice(starts[i], end)

@@ -3,7 +3,7 @@ import { Navigate, useParams } from 'react-router-dom'
 import { useData } from '../data/store'
 import { seasonLabel } from '../data/seasons'
 import LogoRow from '../components/LogoRow'
-import SideColumn, { asLines } from '../components/PostImages'
+import SideColumn, { alignedRows, asLines } from '../components/PostImages'
 import ReviewActions, { ShareCards } from '../components/ReviewActions'
 import { makeFeatureCards } from '../share/featureCards'
 import Ko from '../Ko'
@@ -28,12 +28,15 @@ export default function Feature() {
           {post.writer && <div><Ko>{post.writer}</Ko></div>}
         </header>
 
-        <div className="post-main">
-          <div className="post-body">
-            <Ko>{asLines(post.body)}</Ko>
+        {/* 사진마다 글 영역을 지정했으면 그 구간과 사진을 같은 높이에서 시작, 아니면 두 칸이 따로 흐름 */}
+        {(alignedRows(post.body, post.side) || [{ text: post.body, blocks: post.side || [] }]).map((row, i) => (
+          <div key={i} className="post-main">
+            <div className="post-body">
+              <Ko>{asLines(row.text)}</Ko>
+            </div>
+            <SideColumn blocks={row.blocks} />
           </div>
-          <SideColumn blocks={post.side || []} />
-        </div>
+        ))}
 
         <p className="post-meta">
           <span>{seasonLabel(post.season)}</span>

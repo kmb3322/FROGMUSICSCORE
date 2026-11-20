@@ -36,7 +36,7 @@ function fromServer(posts) {
         body: p.body,
         side: (p.side || []).map((b) =>
           b.type === 'image'
-            ? { type: 'image', src: b.media ? mediaUrl(b.media) : `${import.meta.env.BASE_URL}${b.path}`, w: b.w, h: b.h }
+            ? { type: 'image', src: b.media ? mediaUrl(b.media) : `${import.meta.env.BASE_URL}${b.path}`, w: b.w, h: b.h, anchor: b.anchor }
             : b,
         ),
       })

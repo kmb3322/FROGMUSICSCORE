@@ -168,11 +168,21 @@
   height: 100%;
   object-fit: cover;
 }
-.write-img button {
+/* 사진 위 버튼: 삭제 · 글 지정 · 해제 */
+.write-img-tools {
   position: absolute;
   top: 0;
   left: 0;
+  display: flex;
+}
+.write-img-tools button {
   background: var(--accent) !important;
+  padding: 0 0.25em !important;
+}
+/* 지정한 글 영역의 앞부분 */
+.write-anchor {
+  background: var(--accent);
+  display: inline-block;
 }
 
 .write-actions {

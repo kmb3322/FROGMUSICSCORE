@@ -303,6 +303,8 @@ function validate(p, keep = {}) {
             path,
             w: Math.max(1, Math.round(Number(b.w) || 1)),
             h: Math.max(1, Math.round(Number(b.h) || 1)),
+            // 이 사진에 해당하는 본문 글 영역의 시작 위치 (지정 안 하면 없음 → 자동 배치)
+            ...(Number.isInteger(b.anchor) && b.anchor >= 0 ? { anchor: Math.min(b.anchor, body.length) } : {}),
           },
         ]
       return []
