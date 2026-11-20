@@ -14,9 +14,14 @@ export const albumSeason = (x) => x.season || seasonOf(x.released)
 
 // 카테고리 (메인 리스트 · 글쓰기 선택지 순서). 여기에 이름을 더하면 바로 생김.
 // 글쓰기 화면에서 새 이름을 직접 입력해도 되고, 글이 있는 카테고리만 메인에 섹션으로 나옴
-export const CATEGORIES = ['한국 힙합', '미국 힙합', '한국 R&B', '팝', '록 · 밴드', '일렉트로닉', '재즈']
-const LEGACY = { kr: '한국 힙합', us: '미국 힙합' } // 예전 데이터(region: kr/us)
-export const albumCategory = (x) => x.category || LEGACY[x.region] || '기타'
+export const CATEGORIES = ['한국 힙합', '해외 힙합', '한국 R&B', '해외 R&B', '한국 팝', '해외 팝']
+// 예전 데이터: region kr/us, 예전 이름 '미국 힙합' → 지금 이름으로
+const LEGACY = { kr: '한국 힙합', us: '해외 힙합' }
+const RENAMED = { '미국 힙합': '해외 힙합' }
+export const albumCategory = (x) => {
+  const c = x.category || LEGACY[x.region] || '기타'
+  return RENAMED[c] || c
+}
 
 // 정해 둔 카테고리 + 글에서 새로 쓴 카테고리
 export const categoriesOf = (data) => [...new Set([...CATEGORIES, ...data.albums.map(albumCategory)])]

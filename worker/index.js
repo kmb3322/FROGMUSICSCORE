@@ -266,7 +266,7 @@ function validate(p, keep = {}) {
     if (!artist || !title || (!cover && !coverPath)) return null
     if (!Number.isFinite(score) || score < 0 || score > 10) return null
     // 카테고리: 이름 그대로 (예전 데이터의 region: kr/us 도 받아 줌)
-    const category = line(p.category, 30) || { kr: '한국 힙합', us: '미국 힙합' }[p.region] || ''
+    const category = line(p.category, 30) || { kr: '한국 힙합', us: '해외 힙합' }[p.region] || ''
     if (!category) return null
     return {
       kind: 'review',
