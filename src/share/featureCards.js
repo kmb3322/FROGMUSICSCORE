@@ -3,6 +3,7 @@
 //  2장~: 사진 한 장을 카드 두 장이 나눠 가짐 (가로 1080px 사진이 두 카드의 경계에 걸침)
 //        앞 카드: 왼쪽 2/3 글 · 오른쪽 1/3 사진 앞부분 / 뒤 카드: 왼쪽 2/3 사진 나머지 · 오른쪽 1/3 글
 //  - 사진은 최대 10장. 사이트 화면에서 그 사진 옆에 있던 본문 구간을 그 사진의 두 카드에 넣음
+//  - 사진이 있는 카드의 글은 사진의 위아래 범위 안에서만 (시작·끝 모두)
 //  - 글이 두 카드에 다 안 들어가면 그 뒤에 글만 있는 카드를 이어 붙임
 
 import { BG, canvas, drawLogo, FG, font, H, LINE, loadImage, LOGO, PAD, SIZE, tintedText, toBlob, W } from './cards'
@@ -104,11 +105,11 @@ function drawPhoto(ctx, img, im, x, y, width) {
   ctx.drawImage(img, cx, cy, cw, ch, x, y, width, photoHeight(im, width))
 }
 
-function writeLines(ctx, lines, x) {
+function writeLines(ctx, lines, x, y = PAD) {
   ctx.fillStyle = FG
   ctx.font = font(SIZE)
   ctx.textAlign = 'left'
-  lines.forEach((l, k) => ctx.fillText(l.text, x, PAD + k * LINE))
+  lines.forEach((l, k) => ctx.fillText(l.text, x, y + k * LINE))
 }
 
 async function coverCard(post, photo) {
@@ -158,7 +159,8 @@ async function pairCards(photo, text) {
   const img = await loadImage(photo.src)
   const ph = photoHeight(photo, W)
   const py = Math.round((H - ph) / 2)
-  const cap = Math.floor((H - PAD * 2) / LINE)
+  // 글은 사진의 위아래 범위 안에서만 시작하고 끝남 (넘치는 글은 다음 카드로)
+  const cap = Math.floor(ph / LINE)
   const third = W / 3
 
   // 앞 카드: 왼쪽 2/3 글, 오른쪽 1/3에 사진 앞부분
@@ -166,14 +168,14 @@ async function pairCards(photo, text) {
   drawPhoto(actx, img, photo, third * 2, py, W)
   actx.font = font(SIZE)
   const ta = take(actx, text, third * 2 - PAD - GAP, cap)
-  writeLines(actx, ta.lines, PAD)
+  writeLines(actx, ta.lines, PAD, py)
 
   // 뒤 카드: 왼쪽 2/3에 사진 나머지, 오른쪽 1/3 글
   const [b, bctx] = canvas()
   drawPhoto(bctx, img, photo, -third, py, W)
   bctx.font = font(SIZE)
   const tb = take(bctx, ta.rest, W - PAD - (third * 2 + GAP), cap)
-  writeLines(bctx, tb.lines, third * 2 + GAP)
+  writeLines(bctx, tb.lines, third * 2 + GAP, py)
 
   return [await toBlob(a), await toBlob(b), ...(await textOnly(tb.rest))]
 }
