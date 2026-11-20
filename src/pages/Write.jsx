@@ -270,7 +270,8 @@ export default function Write() {
 
   // 사진의 글 영역 지정: 본문에서 커서가 있던(또는 선택한) 위치부터
   const assignText = (key) => {
-    const pos = focusRow.current + (bodyRef.current ? bodyRef.current.selectionStart : 0)
+    let pos = focusRow.current + (bodyRef.current ? bodyRef.current.selectionStart : 0)
+    while (f.body[pos] === '\n') pos++ // 빈 줄에 커서가 있으면 다음 글부터 (페이지와 같게)
     setSide((list) => list.map((b) => (b.key === key ? { ...b, anchor: pos } : b)))
   }
   const clearText = (key) =>
@@ -568,7 +569,7 @@ export default function Write() {
                   <Ko>+ 사진</Ko>
                 </button>
               )}
-              {row.blocks.map((b, i) =>
+              {row.blocks.map((b) =>
                 b.type === 'image' ? (
                   <div key={b.key}>
                     <div className="write-img" style={{ aspectRatio: imageRatio(b) }}>
