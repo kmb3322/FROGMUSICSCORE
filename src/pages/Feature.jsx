@@ -5,6 +5,7 @@ import { seasonLabel } from '../data/seasons'
 import LogoRow from '../components/LogoRow'
 import SideColumn, { alignedRows, asLines } from '../components/PostImages'
 import ReviewActions, { ShareCards } from '../components/ReviewActions'
+import FeatureFlow from '../components/FeatureFlow'
 import { makeFeatureCards } from '../share/featureCards'
 import Ko from '../Ko'
 import './Post.css'
@@ -18,7 +19,9 @@ export default function Feature() {
   if (!post) return data.loaded ? <Navigate to="/" replace /> : null
 
   return (
-    <div className="post-page">
+    <div className="post-page feature-page">
+      {/* 스크롤하는 동안만 사진 색 그라데이션 (멈추면 원래 배경) */}
+      <FeatureFlow watch={post.id} />
       {cards && <ShareCards blobs={cards} name={`frogmusicscore-${post.id}`} onClose={() => setCards(null)} />}
       <LogoRow />
 

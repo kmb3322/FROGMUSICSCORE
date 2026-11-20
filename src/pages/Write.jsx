@@ -242,9 +242,35 @@ export default function Write() {
       )
     setF((v) => ({ ...v, body: text }))
   }
+  // 기획 게시물 편집 줄: 글 영역을 지정한 사진마다 본문 입력칸을 그 위치에서 나눔
+  // → 올린 페이지처럼 각 구간 입력칸과 그 사진이 같은 높이에서 시작 (지정이 없으면 한 줄)
+  const rows = []
+  {
+    let cur = { start: 0, blocks: [] }
+    let last = 0
+    for (const b of side) {
+      if (b.type === 'image' && Number.isInteger(b.anchor)) {
+        rows.push(cur)
+        last = Math.min(Math.max(b.anchor, last), f.body.length)
+        cur = { start: last, blocks: [b] }
+      } else cur.blocks.push(b)
+    }
+    rows.push(cur)
+    rows.forEach((r, i) => (r.end = rows[i + 1]?.start ?? f.body.length))
+  }
+  // i번째 구간 입력칸을 고치면 본문 전체에 반영하고, 아래 구간들의 지정 위치를 그만큼 밀고 당김
+  const setSegment = (i) => (text) => {
+    const { start, end } = rows[i]
+    const delta = text.length - (end - start)
+    const below = new Set(rows.slice(i + 1).map((r) => r.blocks[0]?.key))
+    if (delta) setSide((list) => list.map((b) => (below.has(b.key) ? { ...b, anchor: b.anchor + delta } : b)))
+    setF((v) => ({ ...v, body: v.body.slice(0, start) + text + v.body.slice(end) }))
+  }
+  const focusRow = useRef(0) // 커서가 있던 구간의 시작 위치
+
   // 사진의 글 영역 지정: 본문에서 커서가 있던(또는 선택한) 위치부터
   const assignText = (key) => {
-    const pos = bodyRef.current ? bodyRef.current.selectionStart : 0
+    const pos = focusRow.current + (bodyRef.current ? bodyRef.current.selectionStart : 0)
     setSide((list) => list.map((b) => (b.key === key ? { ...b, anchor: pos } : b)))
   }
   const clearText = (key) =>
@@ -511,67 +537,78 @@ export default function Write() {
       </div>
 
       {/* 본문 + 우측 칸 */}
-      <div className="post-main">
-        <div className="post-body">
-          <AutoText
-            textRef={bodyRef}
-            value={f.body}
-            onChange={setBody}
-            placeholder={kind === 'review' ? '리뷰' : '본문'}
-          />
-        </div>
-
-        {kind === 'review' ? (
+      {kind === 'review' ? (
+        <div className="post-main">
+          <div className="post-body">
+            <AutoText textRef={bodyRef} value={f.body} onChange={setBody} placeholder="리뷰" />
+          </div>
           <div className="post-side">
             <button type="button" className="write-cover" onClick={() => pick(false, ([im]) => im && setCover(im))}>
               {cover ? <img src={cover.url} alt="" /> : <Ko>커버</Ko>}
             </button>
           </div>
-        ) : (
-          <div className="post-side write-side">
-            <button type="button" className="write-add" onClick={addImages}>
-              <Ko>+ 사진</Ko>
-            </button>
-            {side.map((b, i) =>
-              b.type === 'image' ? (
-                <div key={b.key}>
-                  <div className="write-img" style={{ aspectRatio: imageRatio(b) }}>
-                    <img src={b.url} alt="" draggable="false" />
-                    <div className="write-img-tools">
-                      <button type="button" onClick={() => removeImage(b.key)}>
-                        <Ko>삭제</Ko>
-                      </button>
-                      {/* 본문에서 커서를 둔(선택한) 위치부터 이 사진의 글 영역 */}
-                      <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => assignText(b.key)}>
-                        <Ko>글 지정</Ko>
-                      </button>
-                      {Number.isInteger(b.anchor) && (
-                        <button type="button" onClick={() => clearText(b.key)}>
-                          <Ko>해제</Ko>
+        </div>
+      ) : (
+        rows.map((row, ri) => (
+          <div key={ri} className="post-main">
+            <div className="post-body">
+              <AutoText
+                value={f.body.slice(row.start, row.end)}
+                onChange={setSegment(ri)}
+                onFocus={(e) => {
+                  bodyRef.current = e.target
+                  focusRow.current = row.start
+                }}
+                placeholder={ri === 0 ? '본문' : ''}
+              />
+            </div>
+            <div className="post-side write-side">
+              {ri === 0 && (
+                <button type="button" className="write-add" onClick={addImages}>
+                  <Ko>+ 사진</Ko>
+                </button>
+              )}
+              {row.blocks.map((b, i) =>
+                b.type === 'image' ? (
+                  <div key={b.key}>
+                    <div className="write-img" style={{ aspectRatio: imageRatio(b) }}>
+                      <img src={b.url} alt="" draggable="false" />
+                      <div className="write-img-tools">
+                        <button type="button" onClick={() => removeImage(b.key)}>
+                          <Ko>삭제</Ko>
                         </button>
-                      )}
+                        {/* 본문에서 커서를 둔(선택한) 위치부터 이 사진의 글 영역 */}
+                        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => assignText(b.key)}>
+                          <Ko>글 지정</Ko>
+                        </button>
+                        {Number.isInteger(b.anchor) && (
+                          <button type="button" onClick={() => clearText(b.key)}>
+                            <Ko>해제</Ko>
+                          </button>
+                        )}
+                      </div>
                     </div>
+                    {Number.isInteger(b.anchor) && (
+                      <div className="write-anchor">
+                        <Ko>{`「${snippet(b.anchor)}」`}</Ko>
+                      </div>
+                    )}
                   </div>
-                  {Number.isInteger(b.anchor) && (
-                    <div className="write-anchor">
-                      <Ko>{`「${snippet(b.anchor)}」`}</Ko>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <AutoText
-                  key={b.key}
-                  className="post-side-text"
-                  value={b.text}
-                  onChange={setSideText(b.key)}
-                  onFocus={() => setFocusKey(b.key)}
-                  placeholder=""
-                />
-              ),
-            )}
+                ) : (
+                  <AutoText
+                    key={b.key}
+                    className="post-side-text"
+                    value={b.text}
+                    onChange={setSideText(b.key)}
+                    onFocus={() => setFocusKey(b.key)}
+                    placeholder=""
+                  />
+                ),
+              )}
+            </div>
           </div>
-        )}
-      </div>
+        ))
+      )}
 
       <div className="write-actions">
         {editing ? (

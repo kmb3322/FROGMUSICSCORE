@@ -234,3 +234,28 @@
 .post-page .review-actions button.is-on {
   background: var(--accent);
 }
+
+/* ── 기획 게시물 스크롤 배경 ──
+   글씨는 앨범 리스트처럼 배경에 반전(difference)되어 어떤 색 위에서도 읽힘. 사진은 반전 안 함 */
+.feature-flow {
+  z-index: -1; /* 글·사진 뒤, 페이지 바탕 위 */
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.feature-flow.is-on {
+  opacity: 1;
+  transition-duration: 0.25s;
+}
+.feature-page .logo-row,
+.feature-page .post-info,
+.feature-page .post-body,
+.feature-page .post-side-text,
+.feature-page .post-meta,
+.feature-page .review-actions {
+  color: var(--fg-diff);
+  mix-blend-mode: difference;
+}
+.feature-page .logo-row a:hover,
+.feature-page .review-actions button.is-on {
+  background: var(--accent-diff);
+}
