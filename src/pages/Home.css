@@ -81,7 +81,7 @@
 }
 /* 비어 있을 땐 SEARCH 글자만큼만 → 마우스를 올리면 그 부분 초록 (다른 버튼들과 같게) */
 .search-input:placeholder-shown:not(:focus) {
-  width: 3.9em; /* SEARCH 글자 폭 */
+  width: var(--search-w, 4.6em); /* SEARCH 글자 실제 폭 (Home.jsx에서 잼) */
   cursor: pointer;
 }
 .search-input:placeholder-shown:not(:focus):hover {

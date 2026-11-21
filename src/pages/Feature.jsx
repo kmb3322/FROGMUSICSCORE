@@ -45,7 +45,6 @@ export default function Feature() {
           <span>{seasonLabel(post.season)}</span>
           <span>{dateLabel(post.date)}</span>
         </p>
-        <p className="post-site">{SITE}</p>
         <ReviewActions
           id={post.id}
           url={`${window.location.origin}${import.meta.env.BASE_URL}post/${post.id}`}
@@ -53,6 +52,7 @@ export default function Feature() {
           makeImages={() => makeFeatureCards(post, `${seasonLabel(post.season)}   ${dateLabel(post.date)}`)}
           onCards={setCards}
         />
+        <p className="post-site">{SITE}</p>
       </article>
     </div>
   )

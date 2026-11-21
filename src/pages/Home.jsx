@@ -1,10 +1,29 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { albumSeason, dateLabel, sectionsFor, search, seasonLabel, yearsOf } from '../data/seasons'
 import { useData } from '../data/store'
 import LogoRow from '../components/LogoRow'
 import Ko from '../Ko'
 import './Home.css'
+
+// SEARCH 글자 실제 폭을 재서 입력칸(비어 있을 때) 폭으로 — 글꼴(Helvetica/Roboto)마다 달라서
+function useFitPlaceholder(ref) {
+  useEffect(() => {
+    const fit = () => {
+      const el = ref.current
+      if (!el) return
+      const cs = getComputedStyle(el)
+      const ctx = document.createElement('canvas').getContext('2d')
+      ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
+      if ('letterSpacing' in ctx) ctx.letterSpacing = cs.letterSpacing
+      el.style.setProperty('--search-w', `${Math.ceil(ctx.measureText(el.placeholder).width) + 2}px`)
+    }
+    fit()
+    document.fonts?.ready.then(fit) // 글꼴을 다 불러온 뒤 다시
+    window.addEventListener('resize', fit) // 모바일 글자 크기 전환
+    return () => window.removeEventListener('resize', fit)
+  }, [ref])
+}
 
 const MODES = [
   { key: 'album', label: '앨범' },
@@ -44,6 +63,8 @@ export default function Home() {
   const [mode, setMode] = useState('album')
   const [focused, setFocused] = useState(false)
   const results = search(data, query, mode)
+  const searchRef = useRef(null)
+  useFitPlaceholder(searchRef)
   // 검색 모드 버튼은 SEARCH를 눌렀을 때(입력 중이거나 검색어가 있을 때)만
   const showModes = focused || query.trim() !== ''
 
@@ -57,6 +78,7 @@ export default function Home() {
         {/* 검색: 앨범(제목·키워드) / 아티스트 / 내용 */}
         <div className="search">
           <input
+            ref={searchRef}
             className="search-input"
             type="search"
             value={query}

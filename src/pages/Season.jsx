@@ -133,7 +133,6 @@ export default function Season({ code, startId }) {
                 <span>{seasonLabel(code)}</span>
                 <span>{dateLabel(album.date)}</span>
               </p>
-              <p className="review-site">{SITE}</p>
               <ReviewActions
                 id={album.id}
                 url={`${window.location.origin}${import.meta.env.BASE_URL}${code}?album=${album.id}`}
@@ -141,6 +140,7 @@ export default function Season({ code, startId }) {
                 makeImages={() => makeCards(album, `${seasonLabel(code)}   ${dateLabel(album.date)}`)}
                 onCards={setCards}
               />
+              <p className="review-site">{SITE}</p>
             </div>
           )}
         </div>

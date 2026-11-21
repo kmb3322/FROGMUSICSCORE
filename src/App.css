@@ -59,9 +59,12 @@
   display: flex;
   gap: 1em;
 }
-/* 시즌·날짜 바로 아래 사이트 주소 */
+/* 글 끝: 시즌·날짜 → (두 줄 여백) Likes · Share → (한 줄 여백) 사이트 주소 */
 .review .review-meta {
-  margin-bottom: 0;
+  margin-bottom: calc(var(--line) * 2);
+}
+.review .review-site {
+  margin: var(--line) 0 0;
 }
 
 .logo {

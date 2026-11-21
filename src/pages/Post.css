@@ -260,7 +260,11 @@
 .post-side {
   min-width: 0;
 }
+/* 글 끝: 시즌·날짜 → (두 줄 여백) Likes · Share → (한 줄 여백) 사이트 주소 */
+.post-page .review-actions {
+  margin-top: calc(var(--line) * 2);
+}
 .post-site {
   max-width: var(--left);
-  margin: 0;
+  margin: var(--line) 0 0;
 }
