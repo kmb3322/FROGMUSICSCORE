@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { seasonAlbums, seasonLabel } from '../data/seasons'
+import { dateLabel, seasonAlbums, seasonLabel, SITE } from '../data/seasons'
 import { useData } from '../data/store'
 import CoverStack from '../components/CoverStack'
 import ColorFlow from '../components/ColorFlow'
@@ -131,13 +131,14 @@ export default function Season({ code, startId }) {
               {/* 시즌 + 평론 날짜: 글 맨 아래, 한 줄 띄우고 */}
               <p className="review-meta">
                 <span>{seasonLabel(code)}</span>
-                <span>{album.date}</span>
+                <span>{dateLabel(album.date)}</span>
               </p>
+              <p className="review-site">{SITE}</p>
               <ReviewActions
                 id={album.id}
                 url={`${window.location.origin}${import.meta.env.BASE_URL}${code}?album=${album.id}`}
                 shareTitle={`${album.artist} — ${album.title}`}
-                makeImages={() => makeCards(album, `${seasonLabel(code)}   ${album.date}`)}
+                makeImages={() => makeCards(album, `${seasonLabel(code)}   ${dateLabel(album.date)}`)}
                 onCards={setCards}
               />
             </div>

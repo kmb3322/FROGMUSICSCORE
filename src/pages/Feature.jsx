@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import { useData } from '../data/store'
-import { seasonLabel } from '../data/seasons'
+import { dateLabel, seasonLabel, SITE } from '../data/seasons'
 import LogoRow from '../components/LogoRow'
 import SideColumn, { alignedRows, asLines } from '../components/PostImages'
 import ReviewActions, { ShareCards } from '../components/ReviewActions'
@@ -43,13 +43,14 @@ export default function Feature() {
 
         <p className="post-meta">
           <span>{seasonLabel(post.season)}</span>
-          <span>{post.date}</span>
+          <span>{dateLabel(post.date)}</span>
         </p>
+        <p className="post-site">{SITE}</p>
         <ReviewActions
           id={post.id}
           url={`${window.location.origin}${import.meta.env.BASE_URL}post/${post.id}`}
           shareTitle={post.title}
-          makeImages={() => makeFeatureCards(post, `${seasonLabel(post.season)}   ${post.date}`)}
+          makeImages={() => makeFeatureCards(post, `${seasonLabel(post.season)}   ${dateLabel(post.date)}`)}
           onCards={setCards}
         />
       </article>

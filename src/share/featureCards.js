@@ -7,6 +7,7 @@
 //  - 사진이 있는 카드의 글은 사진의 위아래 범위 안에서만 (시작·끝 모두)
 //  - 글이 두 카드에 다 안 들어가면 그 뒤에 글만 있는 카드를 이어 붙임
 
+import { SITE } from '../data/seasons'
 import { BG, canvas, drawLogo, FG, font, H, LINE, loadImage, LOGO, PAD, SIZE, tintedText, toBlob, W } from './cards'
 
 const MAX_PHOTOS = 10
@@ -14,7 +15,7 @@ const MAX_CARDS = 20 // 인스타 한 번에 최대 20장
 const GAP = 40 // 글과 사진 사이
 
 // 사이트 화면(가로 1440px 기준)의 크기 — 사진이 본문 몇 번째 줄 높이에 있었는지 계산용
-const SITE = { size: 18, line: 18 * 1.15, body: 1440 / 3 - 48, side: Math.min(1440 * 0.42, 640) }
+const SCREEN = { size: 18, line: 18 * 1.15, body: 1440 / 3 - 48, side: Math.min(1440 * 0.42, 640) }
 
 // 줄바꿈 결과를 원문 위치와 함께 (공백 단위, 너무 긴 단어는 글자 단위)
 function layout(ctx, text, max) {
@@ -75,9 +76,9 @@ const photoHeight = (im, width) => (im.h > im.w ? width : (width * im.h) / im.w)
 // 각 사진이 사이트에서 본문 몇 번째 글자 높이 옆에 있었는지 (본문 원문 위치)
 function anchors(post, photos) {
   const [, ctx] = canvas()
-  ctx.font = font(SITE.size)
-  if ('letterSpacing' in ctx) ctx.letterSpacing = `${-0.02 * SITE.size}px`
-  const body = layout(ctx, post.body || '', SITE.body)
+  ctx.font = font(SCREEN.size)
+  if ('letterSpacing' in ctx) ctx.letterSpacing = `${-0.02 * SCREEN.size}px`
+  const body = layout(ctx, post.body || '', SCREEN.body)
   const out = new Map()
   let y = 0
   for (const b of post.side || []) {
@@ -85,15 +86,15 @@ function anchors(post, photos) {
       if (photos.includes(b)) {
         if (Number.isInteger(b.anchor)) out.set(b, Math.min(b.anchor, (post.body || '').length)) // 글쓰기에서 지정한 영역
         else {
-          const idx = Math.floor(y / SITE.line)
+          const idx = Math.floor(y / SCREEN.line)
           out.set(b, idx < body.length ? body[idx].start : (post.body || '').length)
         }
       }
-      y += photoHeight(b, SITE.side)
+      y += photoHeight(b, SCREEN.side)
     } else {
       // 글쓰기 칸과 같게: 엔터 한 번 = 한 줄, 빈 칸도 한 줄
-      const lines = (b.text || '').split('\n').reduce((n, p) => n + Math.max(1, layout(ctx, p, SITE.side).length), 0)
-      y += lines * SITE.line
+      const lines = (b.text || '').split('\n').reduce((n, p) => n + Math.max(1, layout(ctx, p, SCREEN.side).length), 0)
+      y += lines * SCREEN.line
     }
   }
   return out
@@ -187,7 +188,7 @@ async function pairCards(photo, text) {
 export async function makeFeatureCards(post, seasonText) {
   const photos = (post.side || []).filter((b) => b.type === 'image').slice(0, MAX_PHOTOS)
   const body = post.body || ''
-  const ending = `\n\n${seasonText}`
+  const ending = `\n\n${seasonText}\n${SITE}`
   const sample = [post.title, post.writer, body, seasonText, ...LOGO].join(' ')
   await document.fonts.load(font(SIZE), sample).catch(() => {})
 

@@ -7,6 +7,11 @@ export const seasonOf = (released) => {
 }
 export const seasonLabel = (code) => `${code.slice(0, 2)} ${code.slice(2, 3)}/${code.slice(3)}`
 export const seasonYear = (code) => 2000 + Number(code.slice(0, 2))
+// 날짜 표시: 2026.09.15 / 2026-09-15 → 2026 09 15 (공백으로 구분)
+export const dateLabel = (d) => (d || '').replace(/[.-]/g, ' ')
+// 글 칸 · 카드 맨 끝에 붙는 사이트 주소
+export const SITE = 'frogmusicscore.com'
+
 export const isSeason = (code) => /^\d{2}(SS|FW)$/.test(code || '')
 
 // 앨범의 시즌: 글쓰기에서 고른 시즌이 있으면 그것, 없으면 발매일로

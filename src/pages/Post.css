@@ -254,3 +254,13 @@
 .feature-page .review-actions button.is-on {
   background: var(--accent-diff);
 }
+
+/* 좌우 칸이 나란한 줄에서 글 칸이 긴 글자 때문에 넓어지지 않게 */
+.post-body,
+.post-side {
+  min-width: 0;
+}
+.post-site {
+  max-width: var(--left);
+  margin: 0;
+}

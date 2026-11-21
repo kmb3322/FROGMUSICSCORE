@@ -59,6 +59,10 @@
   display: flex;
   gap: 1em;
 }
+/* 시즌·날짜 바로 아래 사이트 주소 */
+.review .review-meta {
+  margin-bottom: 0;
+}
 
 .logo {
   position: relative;

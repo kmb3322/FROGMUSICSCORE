@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { albumSeason, sectionsFor, search, seasonLabel, yearsOf } from '../data/seasons'
+import { albumSeason, dateLabel, sectionsFor, search, seasonLabel, yearsOf } from '../data/seasons'
 import { useData } from '../data/store'
 import LogoRow from '../components/LogoRow'
 import Ko from '../Ko'
@@ -145,7 +145,7 @@ function Section({ section }) {
           {section.posts.map((p) => (
             <Link key={p.id} to={`/post/${p.id}`} className="post">
               <span><Ko>{p.title}</Ko></span>
-              <span>{p.date}</span>
+              <span>{dateLabel(p.date)}</span>
             </Link>
           ))}
         </div>

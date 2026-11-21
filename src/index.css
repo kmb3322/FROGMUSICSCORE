@@ -103,3 +103,8 @@ a {
     --gutter: 16px;
   }
 }
+
+/* 긴 단어·띄어쓰기 없는 한글·URL도 칸 끝에서 줄바꿈 → 글 칸이 옆 칸을 침범하지 않게 */
+body {
+  overflow-wrap: anywhere;
+}
