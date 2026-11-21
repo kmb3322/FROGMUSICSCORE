@@ -55,16 +55,16 @@
   z-index: 1;
 }
 
-/* 글 끝: (열 줄 여백) 시즌 / 날짜 (두 줄로) → (다섯 줄 여백) Likes · Share → (세 줄 여백) 사이트 주소 */
+/* 글 끝: (다섯 줄 여백) 시즌 / 날짜 (두 줄로) → (두 줄 여백) Likes · Share → (두 줄 여백) 사이트 주소 */
 .review-meta {
   display: flex;
   flex-direction: column;
 }
 .review .review-meta {
-  margin: calc(var(--line) * 10) 0 calc(var(--line) * 5);
+  margin: calc(var(--line) * 5) 0 calc(var(--line) * 2);
 }
 .review .review-site {
-  margin: calc(var(--line) * 3) 0 0;
+  margin: calc(var(--line) * 2) 0 0;
 }
 
 .logo {
@@ -110,6 +110,12 @@
 }
 .review p {
   margin: 0 0 1.15em;
+}
+/* 리뷰 본문: 글쓰기 칸과 같은 규칙으로 (줄바꿈·빈 줄·연속 공백 그대로) */
+.review-body {
+  white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 /* ── 우측 2/3: 쌓인 앨범 커버 ── */
@@ -242,4 +248,8 @@
   max-height: 100%;
   aspect-ratio: 3 / 4;
   object-fit: contain;
+}
+
+.review-body {
+  tab-size: 4;
 }

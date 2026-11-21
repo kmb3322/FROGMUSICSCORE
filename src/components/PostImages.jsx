@@ -26,7 +26,7 @@ export function alignedRows(body = '', side = []) {
   }
   return rows
     .map((r, i) => ({
-      text: body.slice(r.start, rows[i + 1]?.start ?? body.length).replace(/^\n+/, ''), // 구간 첫 줄이 빈 줄이 되지 않게
+      text: body.slice(r.start, rows[i + 1]?.start ?? body.length), // 글쓰기에서 쓴 그대로 (빈 줄 포함)
       blocks: r.blocks,
     }))
     .filter((r) => r.text.trim() || r.blocks.length)

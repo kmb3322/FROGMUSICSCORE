@@ -65,12 +65,12 @@
   user-select: none;
 }
 
-/* 글 끝: (열 줄 여백) 시즌 / 날짜 (두 줄로) → (다섯 줄 여백) Likes · Share → (세 줄 여백) 사이트 주소 */
+/* 글 끝: (다섯 줄 여백) 시즌 / 날짜 (두 줄로) → (두 줄 여백) Likes · Share → (두 줄 여백) 사이트 주소 */
 .post-meta {
   display: flex;
   flex-direction: column;
   max-width: var(--left);
-  margin: calc(var(--line) * 10) 0 0;
+  margin: calc(var(--line) * 5) 0 0;
 }
 
 /* 모바일: 글 아래로 우측 칸을 이어서 */
@@ -125,11 +125,18 @@
 .field::placeholder {
   color: var(--muted);
 }
+/* 글쓰기 칸: 올린 화면(.post-body · .review-body)과 같은 줄바꿈 규칙 */
 .field-body {
   resize: none;
   overflow: hidden;
   white-space: pre-wrap;
   word-break: keep-all;
+  overflow-wrap: anywhere;
+  tab-size: 4;
+}
+.post-body,
+.post-side-text {
+  tab-size: 4;
 }
 .field-year {
   display: inline-block;
@@ -284,9 +291,9 @@
   min-width: 0;
 }
 .post-page .review-actions {
-  margin-top: calc(var(--line) * 5);
+  margin-top: calc(var(--line) * 2);
 }
 .post-site {
   max-width: var(--left);
-  margin: calc(var(--line) * 3) 0 0;
+  margin: calc(var(--line) * 2) 0 0;
 }

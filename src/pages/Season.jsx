@@ -7,6 +7,7 @@ import ColorFlow from '../components/ColorFlow'
 import usePager from '../usePager'
 import ReviewActions, { ShareCards } from '../components/ReviewActions'
 import { makeCards } from '../share/cards'
+import { asLines } from '../components/PostImages'
 import Ko from '../Ko'
 import '../App.css'
 
@@ -123,11 +124,10 @@ export default function Season({ code, startId }) {
 
           {open && (
             <div className="review">
-              {album.review.split('\n\n').map((p, i) => (
-                <p key={i}>
-                  <Ko>{p}</Ko>
-                </p>
-              ))}
+              {/* 글쓰기에서 쓴 그대로 (줄바꿈·빈 줄·띄어쓰기 모두) */}
+              <div className="review-body">
+                <Ko>{asLines(album.review)}</Ko>
+              </div>
               {/* 시즌 + 평론 날짜: 글 맨 아래, 한 줄 띄우고 */}
               <p className="review-meta">
                 <span>{seasonLabel(code)}</span>
