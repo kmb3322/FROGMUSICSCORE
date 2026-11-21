@@ -188,7 +188,7 @@ async function pairCards(photo, text) {
 export async function makeFeatureCards(post, seasonText) {
   const photos = (post.side || []).filter((b) => b.type === 'image').slice(0, MAX_PHOTOS)
   const body = post.body || ''
-  const ending = `\n\n${seasonText}\n${SITE}`
+  const ending = `\n\n${seasonText}\n\n\n\n${SITE}` // 시즌 / 날짜, 세 줄 띄우고 사이트 주소
   const sample = [post.title, post.writer, body, seasonText, ...LOGO].join(' ')
   await document.fonts.load(font(SIZE), sample).catch(() => {})
 

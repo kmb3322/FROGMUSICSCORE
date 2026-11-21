@@ -137,7 +137,7 @@ export default function Season({ code, startId }) {
                 id={album.id}
                 url={`${window.location.origin}${import.meta.env.BASE_URL}${code}?album=${album.id}`}
                 shareTitle={`${album.artist} — ${album.title}`}
-                makeImages={() => makeCards(album, `${seasonLabel(code)}   ${dateLabel(album.date)}`)}
+                makeImages={() => makeCards(album, `${seasonLabel(code)}\n${dateLabel(album.date)}`)}
                 onCards={setCards}
               />
               <p className="review-site">{SITE}</p>

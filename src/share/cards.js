@@ -210,8 +210,11 @@ async function textCards({ album, seasonText }) {
     '',
     ...wrap(measure, album.review || '', max),
     '',
-    seasonText,
-    SITE,
+    ...seasonText.split('\n'), // 시즌 / 날짜
+    '',
+    '',
+    '',
+    SITE, // 세 줄 띄우고 사이트 주소
   ]
 
   const top = PAD

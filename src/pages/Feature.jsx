@@ -29,7 +29,7 @@ export default function Feature() {
         id={post.id}
         url={`${window.location.origin}${import.meta.env.BASE_URL}post/${post.id}`}
         shareTitle={post.title}
-        makeImages={() => makeFeatureCards(post, `${seasonLabel(post.season)}   ${dateLabel(post.date)}`)}
+        makeImages={() => makeFeatureCards(post, `${seasonLabel(post.season)}\n${dateLabel(post.date)}`)}
         onCards={setCards}
       />
       <p className="post-site">{SITE}</p>
