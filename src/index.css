@@ -11,7 +11,7 @@
 }
 
 /* Acumin Pro (Adobe Fonts) — 굵기 699 이하 → Regular, 700 이상 → Bold 로 묶음 (minbeomkim.com과 같은 방식)
-   원본은 index.html의 typekit 스타일시트(ivx4xbp.css). Adobe Fonts 웹 프로젝트에 이 도메인이 등록돼 있어야 받아짐 */
+   원본은 index.html의 typekit 스타일시트(ihp4did.css). Adobe Fonts 웹 프로젝트에 이 도메인이 등록돼 있어야 받아짐 */
 @font-face {
   font-family: 'AcuminMapped';
   src: url("https://use.typekit.net/af/7cfafa/00000000000000007735d431/31/l?primer=7cdcb44be4a7db8877ffa5c0007b8dd865b3bbc383831fe2ea177f62257a9191&fvd=n4&v=3") format("woff2"),
