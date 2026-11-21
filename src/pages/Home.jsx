@@ -6,7 +6,7 @@ import LogoRow from '../components/LogoRow'
 import Ko from '../Ko'
 import './Home.css'
 
-// SEARCH 글자 실제 폭을 재서 입력칸(비어 있을 때) 폭으로 — 글꼴(Helvetica/Roboto)마다 달라서
+// SEARCH 글자 실제 폭을 재서 입력칸(비어 있을 때) 폭으로 — 글꼴(Helvetica/Acumin Pro)마다 달라서
 function useFitPlaceholder(ref) {
   useEffect(() => {
     const fit = () => {

@@ -14,7 +14,7 @@ export const LINE = Math.round(SIZE * 1.15)
 export const BG = '#f0f0f0'
 export const FG = '#1a1a1a'
 export const ACCENT = '#61bb46'
-const FAMILY = '"HelveticaLocal", Roboto, "Pretendard Variable", Pretendard, sans-serif'
+const FAMILY = '"HelveticaLocal", "AcuminMapped", "Pretendard Variable", Pretendard, sans-serif'
 export const font = (px) => `700 ${px}px ${FAMILY}`
 export const LOGO = ['FROG', 'MUSIC SCORE', 'KOREA']
 

@@ -19,6 +19,27 @@
   align-items: flex-start;
   gap: var(--gutter);
 }
+/* 왼쪽 칸: 본문 (+ 마지막 줄이면 글 끝) */
+.post-col {
+  flex: 0 1 var(--left);
+  max-width: var(--left);
+  min-width: 0;
+}
+.post-end-narrow {
+  display: none;
+}
+@media (max-width: 768px) {
+  .post-col {
+    flex: none;
+    width: 100%;
+  }
+  .post-end-wide {
+    display: none;
+  }
+  .post-end-narrow {
+    display: block;
+  }
+}
 .post-body {
   flex: 0 1 var(--left);
   max-width: var(--left);
@@ -44,11 +65,12 @@
   user-select: none;
 }
 
+/* 글 끝: (열 줄 여백) 시즌 / 날짜 (두 줄로) → (다섯 줄 여백) Likes · Share → (세 줄 여백) 사이트 주소 */
 .post-meta {
   display: flex;
-  gap: 1em;
+  flex-direction: column;
   max-width: var(--left);
-  margin: var(--line) 0 0;
+  margin: calc(var(--line) * 10) 0 0;
 }
 
 /* 모바일: 글 아래로 우측 칸을 이어서 */
@@ -246,6 +268,7 @@
 .feature-page .post-body,
 .feature-page .post-side-text,
 .feature-page .post-meta,
+.feature-page .post-site,
 .feature-page .review-actions {
   color: var(--fg-diff);
   mix-blend-mode: difference;
@@ -260,11 +283,10 @@
 .post-side {
   min-width: 0;
 }
-/* 글 끝: 시즌·날짜 → (두 줄 여백) Likes · Share → (한 줄 여백) 사이트 주소 */
 .post-page .review-actions {
-  margin-top: calc(var(--line) * 2);
+  margin-top: calc(var(--line) * 5);
 }
 .post-site {
   max-width: var(--left);
-  margin: var(--line) 0 0;
+  margin: calc(var(--line) * 3) 0 0;
 }

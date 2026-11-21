@@ -55,16 +55,16 @@
   z-index: 1;
 }
 
+/* 글 끝: (열 줄 여백) 시즌 / 날짜 (두 줄로) → (다섯 줄 여백) Likes · Share → (세 줄 여백) 사이트 주소 */
 .review-meta {
   display: flex;
-  gap: 1em;
+  flex-direction: column;
 }
-/* 글 끝: 시즌·날짜 → (두 줄 여백) Likes · Share → (한 줄 여백) 사이트 주소 */
 .review .review-meta {
-  margin-bottom: calc(var(--line) * 2);
+  margin: calc(var(--line) * 10) 0 calc(var(--line) * 5);
 }
 .review .review-site {
-  margin: var(--line) 0 0;
+  margin: calc(var(--line) * 3) 0 0;
 }
 
 .logo {

@@ -10,6 +10,25 @@
   font-weight: 700 900;
 }
 
+/* Acumin Pro (Adobe Fonts) — 굵기 699 이하 → Regular, 700 이상 → Bold 로 묶음 (minbeomkim.com과 같은 방식)
+   원본은 index.html의 typekit 스타일시트(ivx4xbp.css). Adobe Fonts 웹 프로젝트에 이 도메인이 등록돼 있어야 받아짐 */
+@font-face {
+  font-family: 'AcuminMapped';
+  src: url("https://use.typekit.net/af/7cfafa/00000000000000007735d431/31/l?primer=7cdcb44be4a7db8877ffa5c0007b8dd865b3bbc383831fe2ea177f62257a9191&fvd=n4&v=3") format("woff2"),
+       url("https://use.typekit.net/af/7cfafa/00000000000000007735d431/31/d?primer=7cdcb44be4a7db8877ffa5c0007b8dd865b3bbc383831fe2ea177f62257a9191&fvd=n4&v=3") format("woff");
+  font-weight: 100 699;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'AcuminMapped';
+  src: url("https://use.typekit.net/af/df6585/00000000000000007735d404/31/l?primer=7cdcb44be4a7db8877ffa5c0007b8dd865b3bbc383831fe2ea177f62257a9191&fvd=n7&v=3") format("woff2"),
+       url("https://use.typekit.net/af/df6585/00000000000000007735d404/31/d?primer=7cdcb44be4a7db8877ffa5c0007b8dd865b3bbc383831fe2ea177f62257a9191&fvd=n7&v=3") format("woff");
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   /* frog design 'Snow White' 톤 */
   --bg: #f0f0f0;
@@ -17,8 +36,8 @@
   --fg: #1a1a1a;
   --muted: #9a9995;
   --accent: #61bb46;
-  /* 1순위 Helvetica(설치된 경우) → 2순위 Roboto → 한글 Pretendard */
-  --font: 'HelveticaLocal', 'Roboto', 'Pretendard Variable', Pretendard, sans-serif;
+  /* 1순위 Helvetica(설치된 경우) → 2순위 Acumin Pro → 한글 Pretendard */
+  --font: 'HelveticaLocal', 'AcuminMapped', 'Pretendard Variable', Pretendard, sans-serif;
   --size: 18px; /* 원사이즈 */
   /* 자간 -10 (1/1000em 단위) = -0.01em */
   --tracking: -0.01em;

@@ -18,6 +18,24 @@ export default function Feature() {
   const [cards, setCards] = useState(null) // Share → 사진: 만든 카드들
   if (!post) return data.loaded ? <Navigate to="/" replace /> : null
 
+  const rows = alignedRows(post.body, post.side) || [{ text: post.body, blocks: post.side || [] }]
+  const ending = (
+    <>
+      <p className="post-meta">
+        <span>{seasonLabel(post.season)}</span>
+        <span>{dateLabel(post.date)}</span>
+      </p>
+      <ReviewActions
+        id={post.id}
+        url={`${window.location.origin}${import.meta.env.BASE_URL}post/${post.id}`}
+        shareTitle={post.title}
+        makeImages={() => makeFeatureCards(post, `${seasonLabel(post.season)}   ${dateLabel(post.date)}`)}
+        onCards={setCards}
+      />
+      <p className="post-site">{SITE}</p>
+    </>
+  )
+
   return (
     <div className="post-page feature-page">
       {/* 스크롤하는 동안만 사진 색 그라데이션 (멈추면 원래 배경) */}
@@ -31,28 +49,20 @@ export default function Feature() {
           {post.writer && <div><Ko>{post.writer}</Ko></div>}
         </header>
 
-        {/* 사진마다 글 영역을 지정했으면 그 구간과 사진을 같은 높이에서 시작, 아니면 두 칸이 따로 흐름 */}
-        {(alignedRows(post.body, post.side) || [{ text: post.body, blocks: post.side || [] }]).map((row, i) => (
+        {/* 사진마다 글 영역을 지정했으면 그 구간과 사진을 같은 높이에서 시작, 아니면 두 칸이 따로 흐름.
+            글 끝(시즌·날짜 · Likes·Share · 주소)은 마지막 본문 바로 뒤 — 데스크톱은 왼쪽 글 칸 안, 모바일은 맨 아래 */}
+        {rows.map((row, i) => (
           <div key={i} className="post-main">
-            <div className="post-body">
-              <Ko>{asLines(row.text)}</Ko>
+            <div className="post-col">
+              <div className="post-body">
+                <Ko>{asLines(row.text)}</Ko>
+              </div>
+              {i === rows.length - 1 && <div className="post-end post-end-wide">{ending}</div>}
             </div>
             <SideColumn blocks={row.blocks} />
           </div>
         ))}
-
-        <p className="post-meta">
-          <span>{seasonLabel(post.season)}</span>
-          <span>{dateLabel(post.date)}</span>
-        </p>
-        <ReviewActions
-          id={post.id}
-          url={`${window.location.origin}${import.meta.env.BASE_URL}post/${post.id}`}
-          shareTitle={post.title}
-          makeImages={() => makeFeatureCards(post, `${seasonLabel(post.season)}   ${dateLabel(post.date)}`)}
-          onCards={setCards}
-        />
-        <p className="post-site">{SITE}</p>
+        <div className="post-end post-end-narrow">{ending}</div>
       </article>
     </div>
   )
