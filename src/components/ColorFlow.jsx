@@ -34,12 +34,14 @@ export default function ColorFlow({ albums, progress, mode }) {
   }
 
   return (
-    <div className="flow" style={{ opacity: presence }} aria-hidden="true">
-      <div className="flow-layer" style={{ backgroundImage: `url("${current.cover}")`, transform: a }} />
-      <div
-        className="flow-layer"
-        style={{ backgroundImage: `url("${next.cover}")`, transform: b, opacity: mix }}
-      />
+    <div className="flow-sticky" aria-hidden="true">
+      <div className="flow" style={{ opacity: presence }}>
+        <div className="flow-layer" style={{ backgroundImage: `url("${current.cover}")`, transform: a }} />
+        <div
+          className="flow-layer"
+          style={{ backgroundImage: `url("${next.cover}")`, transform: b, opacity: mix }}
+        />
+      </div>
     </div>
   )
 }

@@ -266,8 +266,10 @@
 
 /* ── 기획 게시물 스크롤 배경 ──
    글씨는 앨범 리스트처럼 배경에 반전(difference)되어 어떤 색 위에서도 읽힘. 사진은 반전 안 함 */
-.feature-flow {
+.flow-sticky.is-feature {
   z-index: -1; /* 글·사진 뒤, 페이지 바탕 위 */
+}
+.feature-flow {
   opacity: 0; /* 진하기는 스크롤 속도에 따라 FeatureFlow.jsx가 매 프레임 정함 */
 }
 .feature-page .logo-row,

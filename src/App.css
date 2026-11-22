@@ -84,12 +84,24 @@
 }
 
 /* ── 스크롤 사이 배경 색 흐름 ── */
-.flow {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
+/* 고정(position: fixed) 대신 sticky 묶음 — iOS Safari는 fixed 요소를 주소창·하단 바 사이로만 그려서
+   바 아래(일반 내용은 비치는 곳)에 흰 띠가 남았음. sticky는 일반 내용처럼 바 아래까지 그려짐.
+   높이 0인 묶음이 화면 맨 위에 붙어 있고, 그 안의 .flow를 화면보다 위아래·양옆으로 넉넉히 펼침 */
+.flow-sticky {
+  position: sticky;
+  top: 0;
+  height: 0;
   pointer-events: none;
   z-index: 0;
+}
+.flow {
+  position: absolute;
+  top: -25vh;
+  left: calc(50% - 50vw); /* 부모에 좌우 여백이 있어도 화면 왼쪽 끝부터 */
+  width: 100vw;
+  height: 150lvh;
+  overflow: hidden;
+  pointer-events: none;
 }
 .flow-layer {
   position: absolute;

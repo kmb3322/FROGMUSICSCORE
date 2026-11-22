@@ -103,9 +103,11 @@ export default function FeatureFlow({ watch }) {
   }, [watch])
 
   return (
-    <div className="flow feature-flow" ref={root} aria-hidden="true">
-      <div className="flow-layer" ref={a} />
-      <div className="flow-layer" ref={b} />
+    <div className="flow-sticky is-feature" aria-hidden="true">
+      <div className="flow feature-flow" ref={root}>
+        <div className="flow-layer" ref={a} />
+        <div className="flow-layer" ref={b} />
+      </div>
     </div>
   )
 }
