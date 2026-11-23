@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { albumSeason, byWriter, dateLabel, sectionsFor, search, seasonLabel, yearsOf } from '../data/seasons'
+import { albumSeason, dateLabel, sectionsFor, search, seasonLabel, yearsOf } from '../data/seasons'
 import { useData } from '../data/store'
 import LogoRow from '../components/LogoRow'
 import Ko from '../Ko'
@@ -168,13 +168,12 @@ export default function Home() {
   )
 }
 
-// 아티스트 / 앨범 / 작성자 (메인에선 평점 표시 안 함)
+// 아티스트 / 앨범 (메인에선 작성자·평점 표시 안 함)
 function AlbumText({ album, season = false }) {
   return (
     <span className="album-text">
       <span><Ko>{album.artist}</Ko></span>
       <span><Ko>{album.title}</Ko></span>
-      <span><Ko>{byWriter(album.writer)}</Ko></span>
       {season && <span>{seasonLabel(albumSeason(album))}</span>}
     </span>
   )
