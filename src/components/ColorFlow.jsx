@@ -7,18 +7,28 @@
 // mode 'flick' (확 넘김)                    : 회전 없이 수직으로 흐름
 // 커버 이미지 자체를 크게 흐려서 쓰기 때문에 여러 색이 섞인 커버도 그대로 반영된다.
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-// 지금 문서 스크롤 위치 — 그릴 때마다 바로 읽고, 배경이 보이는 동안(on)만 스크롤에 맞춰 다시 그림
+// 지금 문서 스크롤 위치.
+// 그릴 때(render) window.scrollY를 읽으면 브라우저가 그 자리에서 스타일 계산을 강제로 다시 함 →
+// 앨범을 넘기는 동안(휠 이벤트마다 다시 그림) 매번 그 비용이 붙어 스크롤이 끊겼음.
+// 그래서 스크롤 이벤트 안에서만 읽어 ref에 두고, 그릴 때는 ref 값만 씀.
+// 다시 그리기는 배경이 보이는 동안(on)만
 function useScrollY(on) {
+  const y = useRef(0)
+  const onRef = useRef(on)
+  onRef.current = on
   const [, rerender] = useState(0)
   useEffect(() => {
-    if (!on) return
-    const onScroll = () => rerender((n) => n + 1)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [on])
-  return typeof window === 'undefined' ? 0 : window.scrollY
+    const read = () => {
+      y.current = window.scrollY
+      if (onRef.current) rerender((n) => n + 1)
+    }
+    y.current = window.scrollY
+    window.addEventListener('scroll', read, { passive: true })
+    return () => window.removeEventListener('scroll', read)
+  }, [])
+  return y.current
 }
 
 const smoothstep = (a, b, x) => {
