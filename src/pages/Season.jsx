@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { dateLabel, seasonAlbums, seasonLabel, SITE } from '../data/seasons'
+import { byWriter, metaLines, seasonAlbums, SITE } from '../data/seasons'
 import { useData } from '../data/store'
 import CoverStack from '../components/CoverStack'
 import ColorFlow from '../components/ColorFlow'
@@ -120,7 +120,7 @@ export default function Season({ code, startId }) {
         <div className="caption" ref={captionRef}>
           <div ref={infoRef}><Ko>{album.artist}</Ko></div>
           <div><Ko>{album.title}</Ko></div>
-          <div><Ko>{album.writer}</Ko></div>
+          <div><Ko>{byWriter(album.writer)}</Ko></div>
           <div ref={scoreRef}>{album.score.toFixed(1)}</div>
 
           {open && (
@@ -129,16 +129,17 @@ export default function Season({ code, startId }) {
               <div className="review-body">
                 <Ko>{asLines(album.review)}</Ko>
               </div>
-              {/* 시즌 + 평론 날짜: 글 맨 아래, 한 줄 띄우고 */}
+              {/* 시즌 / 발매일 / 작성일: 글 맨 아래, 한 줄 띄우고 */}
               <p className="review-meta">
-                <span>{seasonLabel(code)}</span>
-                <span>{dateLabel(album.date)}</span>
+                {metaLines(code, album).map((t) => (
+                  <span key={t}><Ko>{t}</Ko></span>
+                ))}
               </p>
               <ReviewActions
                 id={album.id}
                 url={`${window.location.origin}${import.meta.env.BASE_URL}${code}?album=${album.id}`}
                 shareTitle={`${album.artist} — ${album.title}`}
-                makeImages={() => makeCards(album, `${seasonLabel(code)}\n${dateLabel(album.date)}`)}
+                makeImages={() => makeCards(album, metaLines(code, album).join('\n'))}
                 onCards={setCards}
                 onShareLink={() => refreshOgIfAdmin('review', album)}
               />

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import { useData } from '../data/store'
-import { dateLabel, seasonLabel, SITE } from '../data/seasons'
+import { metaLines, SITE } from '../data/seasons'
 import LogoRow from '../components/LogoRow'
 import SideColumn, { alignedRows, asLines } from '../components/PostImages'
 import ReviewActions, { ShareCards } from '../components/ReviewActions'
@@ -23,14 +23,16 @@ export default function Feature() {
   const ending = (
     <>
       <p className="post-meta">
-        <span>{seasonLabel(post.season)}</span>
-        <span>{dateLabel(post.date)}</span>
+        {/* 시즌 / 작성일 (기획 글은 발매일 없음) */}
+        {metaLines(post.season, { date: post.date }).map((t) => (
+          <span key={t}><Ko>{t}</Ko></span>
+        ))}
       </p>
       <ReviewActions
         id={post.id}
         url={`${window.location.origin}${import.meta.env.BASE_URL}post/${post.id}`}
         shareTitle={post.title}
-        makeImages={() => makeFeatureCards(post, `${seasonLabel(post.season)}\n${dateLabel(post.date)}`)}
+        makeImages={() => makeFeatureCards(post, metaLines(post.season, { date: post.date }).join('\n'))}
         onCards={setCards}
         onShareLink={() => refreshOgIfAdmin('feature', post)}
       />

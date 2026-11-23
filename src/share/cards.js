@@ -4,7 +4,7 @@
 //       + 하단 왼쪽 로고 (커버 색을 번진 보색으로 비춤)
 //  2장~: 왼쪽 글 칸을 캡처한 듯한 화면(로고 없이). 글이 길면 잘라서 여러 장
 
-import { SITE } from '../data/seasons'
+import { byWriter, SITE } from '../data/seasons'
 
 export const W = 1080
 export const H = 1440
@@ -205,7 +205,7 @@ async function textCards({ album, seasonText }) {
   const lines = [
     album.artist,
     album.title,
-    album.writer,
+    byWriter(album.writer),
     album.score.toFixed(1),
     '',
     ...wrap(measure, album.review || '', max),

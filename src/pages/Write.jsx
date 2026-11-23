@@ -105,7 +105,13 @@ const finishDate = (v) => {
   const [y, m, d] = v.split(' ')
   return d ? `${y} ${m.padStart(2, '0')} ${d.padStart(2, '0')}` : v
 }
-const dateToSave = (v) => v.replace(/\s+/g, '-') // 저장은 2026-05-15
+const dateToSave = (v) => v.replace(/\s+/g, '-') // 발매일 저장은 2026-05-15
+const writtenToSave = (v) => v.replace(/\s+/g, '.') // 작성일 저장은 2026.05.15 (예전 글과 같은 모양)
+// 오늘 (한국 시간) 2026 05 15 — 작성일 칸 안내 글자. 비워 두고 올리면 서버가 오늘로 저장
+const today = () => {
+  const d = new Date(Date.now() + 9 * 3600e3)
+  return `${d.getUTCFullYear()} ${String(d.getUTCMonth() + 1).padStart(2, '0')} ${String(d.getUTCDate()).padStart(2, '0')}`
+}
 
 const newText = (text = '') => ({ key: crypto.randomUUID(), type: 'text', text })
 
@@ -142,7 +148,7 @@ export default function Write() {
   const [category, setCategory] = useState('한국 힙합')
   const [newCategory, setNewCategory] = useState('')
   const categories = [...new Set([...categoriesOf(data), category])]
-  const [f, setF] = useState({ artist: '', title: '', writer: '', score: '', released: '', keywords: '', body: '' })
+  const [f, setF] = useState({ artist: '', title: '', writer: '', score: '', released: '', date: '', keywords: '', body: '' })
   const set = (k) => (e) => setF((v) => ({ ...v, [k]: typeof e === 'string' ? e : e.target.value }))
 
   const [cover, setCover] = useState(null) // { url, blob, w, h }
@@ -168,7 +174,7 @@ export default function Write() {
     if (editingFeature) {
       setKind('feature')
       setSeason(editing.season)
-      setF((v) => ({ ...v, title: editing.title || '', writer: editing.writer || '', body: editing.body || '' }))
+      setF((v) => ({ ...v, title: editing.title || '', writer: editing.writer || '', date: formatDate(editing.date || ''), body: editing.body || '' }))
       const blocks = (editing.side || []).map((b) =>
         b.type === 'image'
           ? { ...coverFromUrl(b.src), type: 'image', w: b.w, h: b.h, anchor: b.anchor, key: crypto.randomUUID() }
@@ -186,6 +192,7 @@ export default function Write() {
       writer: editing.writer || '',
       score: finishScore(String(editing.score ?? '')),
       released: formatDate(editing.released || ''),
+      date: formatDate(editing.date || ''),
       keywords: (editing.keywords || []).join(' '),
       body: editing.review || '',
     })
@@ -342,7 +349,7 @@ export default function Write() {
     setKind(d.kind || 'review')
     setSeason(d.season || upcomingSeasons()[1])
     setCategory(d.category || albumCategory(d))
-    setF((v) => ({ ...v, ...(d.f || {}), released: formatDate(d.f?.released || '') }))
+    setF((v) => ({ ...v, ...(d.f || {}), released: formatDate(d.f?.released || ''), date: formatDate(d.f?.date || '') }))
     setCover(d.cover ? { ...d.cover, url: coverUrl(d.cover) } : null)
     const blocks = (d.side || []).map((b) =>
       b.type === 'image' ? { ...b, key: crypto.randomUUID(), url: coverUrl(b) } : newText(b.text),
@@ -380,6 +387,7 @@ export default function Write() {
     if (missing.length) return setStatus(`빈 칸 — ${missing.join(', ')}`)
     if (kind === 'review' && !(score >= 0 && score <= 10)) return setStatus('점수 0–10')
     if (kind === 'review' && f.released && !/^\d{4} \d{2} \d{2}$/.test(f.released)) return setStatus('발매일 YYYY MM DD')
+    if (f.date && !/^\d{4} \d{2} \d{2}$/.test(f.date)) return setStatus('작성일 YYYY MM DD')
 
     setBusy(true)
     try {
@@ -393,6 +401,7 @@ export default function Write() {
         writer: f.writer,
         score,
         released: dateToSave(f.released),
+        date: writtenToSave(f.date),
         keywords: f.keywords.split(/[\s,]+/).filter(Boolean), // 공백(또는 쉼표)으로 구분
         cover: up.cover?.media || '',
         coverPath: up.cover?.path || '',
@@ -401,9 +410,9 @@ export default function Write() {
       const payload =
         kind === 'review'
           ? review
-          : { kind, season, title: f.title, writer: f.writer, body: f.body, side: snapshot(null, up.side).side }
+          : { kind, season, title: f.title, writer: f.writer, date: writtenToSave(f.date), body: f.body, side: snapshot(null, up.side).side }
       const { post } = editing
-        ? await api.updatePost(editing.id, { ...payload, date: editing.date, password })
+        ? await api.updatePost(editing.id, { ...payload, password })
         : await api.createPost(payload)
       if (draftId) await api.deleteDraft(draftId).catch(() => {}) // 올린 글의 임시저장은 정리
       // 링크 썸네일: 사진 공유 첫 장 — 기다리지 않고 뒤에서 만들어 올림
@@ -531,12 +540,28 @@ export default function Write() {
               placeholder="발매일 YYYY MM DD"
               inputMode="numeric"
             />
+            <input
+              className="field"
+              value={f.date}
+              onChange={(e) => setF((v) => ({ ...v, date: formatDate(e.target.value) }))}
+              onBlur={() => setF((v) => ({ ...v, date: finishDate(v.date) }))}
+              placeholder={`작성일 ${today()}`} // 비워 두면 올리는 날(오늘)
+              inputMode="numeric"
+            />
             <input className="field" value={f.keywords} onChange={set('keywords')} placeholder="키워드" />
           </>
         ) : (
           <>
             <input className="field" value={f.title} onChange={set('title')} placeholder="제목" />
             <input className="field" value={f.writer} onChange={set('writer')} placeholder="작성자" />
+            <input
+              className="field"
+              value={f.date}
+              onChange={(e) => setF((v) => ({ ...v, date: formatDate(e.target.value) }))}
+              onBlur={() => setF((v) => ({ ...v, date: finishDate(v.date) }))}
+              placeholder={`작성일 ${today()}`} // 비워 두면 올리는 날(오늘)
+              inputMode="numeric"
+            />
           </>
         )}
       </div>

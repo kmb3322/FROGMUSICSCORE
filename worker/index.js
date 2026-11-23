@@ -175,7 +175,8 @@ async function api(req, env, ctx, url) {
       return json({ error: 'wrong_password' }, 401)
     }
     const prev = await env.DB.prepare('SELECT data FROM posts WHERE id = ?').bind(edit[1]).first()
-    const date = prev ? JSON.parse(prev.data).date : /^\d{4}\.\d{2}\.\d{2}$/.test(body?.date || '') ? body.date : undefined
+    // 작성일: 글쓰기에서 고친 값 → 없으면 예전 작성일 (validate에서)
+    const date = prev ? JSON.parse(prev.data).date : undefined
     const post = validate(body, { id: edit[1], date })
     if (!post) return json({ error: 'bad_post' }, 400)
     await env.DB.prepare(
@@ -273,11 +274,14 @@ const line = (v, max, required) => {
   return s === null ? null : s.trim()
 }
 
-// keep: 수정할 때 유지할 id·평론 날짜
+// keep: 수정할 때 유지할 id·작성일
+// 작성일: 글쓰기에서 쓴 값(YYYY.MM.DD) → 없으면 예전 작성일 → 그것도 없으면 오늘(한국 시간)
+const WRITTEN = /^\d{4}\.(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])$/
 function validate(p, keep = {}) {
   if (!p || typeof p !== 'object' || !SEASON.test(p.season || '')) return null
   const now = new Date(Date.now() + 9 * 3600e3) // 한국 시간
   const date =
+    (WRITTEN.test(p.date || '') ? p.date : '') ||
     keep.date || `${now.getUTCFullYear()}.${String(now.getUTCMonth() + 1).padStart(2, '0')}.${String(now.getUTCDate()).padStart(2, '0')}`
   const id = keep.id || `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 6)}`
   const writer = line(p.writer, 100)

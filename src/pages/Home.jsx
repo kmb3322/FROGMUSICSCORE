@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { albumSeason, dateLabel, sectionsFor, search, seasonLabel, yearsOf } from '../data/seasons'
+import { albumSeason, byWriter, dateLabel, sectionsFor, search, seasonLabel, yearsOf } from '../data/seasons'
 import { useData } from '../data/store'
 import LogoRow from '../components/LogoRow'
 import Ko from '../Ko'
@@ -174,7 +174,7 @@ function AlbumText({ album, season = false }) {
     <span className="album-text">
       <span><Ko>{album.artist}</Ko></span>
       <span><Ko>{album.title}</Ko></span>
-      <span><Ko>{album.writer}</Ko></span>
+      <span><Ko>{byWriter(album.writer)}</Ko></span>
       {season && <span>{seasonLabel(albumSeason(album))}</span>}
     </span>
   )
