@@ -8,7 +8,8 @@ import Ko from '../Ko'
 // Share: 링크 / 사진(인스타용 3:4 카드 — makeImages). 빠르게 10번 누르면 비밀번호 → 이 글 수정·삭제
 const SECRET_CLICKS = 10
 const CLICK_GAP = 1200
-export default function ReviewActions({ id, url, shareTitle, makeImages, onCards }) {
+// onShareLink: 링크 공유 때 함께 할 일 (관리자면 링크 썸네일 다시 만들기)
+export default function ReviewActions({ id, url, shareTitle, makeImages, onCards, onShareLink }) {
   const [likes, setLikes] = useState({ count: null, liked: false })
   const [note, setNote] = useState('')
   const [menu, setMenu] = useState(false)
@@ -57,6 +58,7 @@ export default function ReviewActions({ id, url, shareTitle, makeImages, onCards
 
   const shareLink = async () => {
     setMenu(false)
+    onShareLink?.() // 기다리지 않음 — 공유 시트는 누른 직후에 열어야 함
     const data = { title: `${shareTitle} | FROG MUSIC SCORE`, url }
     try {
       if (navigator.share) return await navigator.share(data)

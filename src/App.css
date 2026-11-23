@@ -8,11 +8,12 @@
 }
 
 /* ── 좌측 1/3: 로고 + 현재 앨범 정보 ──
-   고정이 아니라 문서 흐름에 있어서, 글이 길면 글씨 위 스크롤 = 화면 전체 스크롤 */
+   고정이 아니라 문서 흐름에 있어서, 글이 길면 글씨 위 스크롤 = 화면 전체 스크롤
+   .left·.caption 모두 흐름 안(relative) → 시즌 화면 묶음 높이 = 글 전체 높이.
+   그래야 배경 흐름(.flow-sticky)이 끝까지 화면에 붙어 있음
+   (둘 다 absolute였을 땐 묶음 높이가 0이라 sticky가 못 붙고 배경이 글과 함께 위로 올라갔음) */
 .left {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: relative;
   width: 33.333vw;
   min-height: 100vh;
   padding: var(--gutter);
@@ -76,11 +77,9 @@
 }
 
 .caption {
-  position: absolute;
-  top: var(--caption-top);
-  left: var(--gutter);
-  right: var(--gutter);
-  padding-bottom: var(--gutter);
+  position: relative;
+  /* 로고(3줄) 바로 밑에서 --caption-top 위치까지 띄움 (.left 위쪽 여백 gutter 포함) */
+  margin-top: calc(var(--caption-top) - var(--gutter) - var(--line) * 3);
 }
 
 /* ── 스크롤 사이 배경 색 흐름 ── */
@@ -186,7 +185,8 @@
     padding-right: 0;
   }
   .caption {
-    top: calc(var(--cover-top) + var(--cover-size) + var(--peek-total) + var(--gutter));
+    /* 위치: cover-top + cover-size + peek-total + gutter (.left 위 여백 gutter + 로고 3줄을 뺀 값) */
+    margin-top: calc(var(--cover-top) + var(--cover-size) + var(--peek-total) - var(--line) * 3);
   }
 }
 

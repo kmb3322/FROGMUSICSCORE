@@ -251,3 +251,10 @@ export async function makeCards(album, seasonText) {
   const rest = await textCards({ album, seasonText })
   return [first, ...rest]
 }
+
+// 링크 썸네일(og:image)용: 1장만
+export async function makeFirstCard(album) {
+  const sample = [album.artist, album.title, album.score?.toFixed?.(1), ...LOGO].join(' ')
+  await document.fonts.load(font(SIZE), sample).catch(() => {})
+  return coverCard({ album })
+}

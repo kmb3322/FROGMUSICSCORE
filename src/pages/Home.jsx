@@ -123,7 +123,7 @@ export default function Home() {
             </Link>
           ))}
         </section>
-      ) : (
+      ) : !data.loaded ? null : ( // 서버 글을 받기 전 기본 데이터로 먼저 그리면, 받은 뒤 앨범 자리가 바뀌어 보였음
         <>
           {/* 연도 단위로 리스트 넘기기 (years는 최신순) — 리스트 바로 위 */}
           <nav className="years" aria-label="연도">

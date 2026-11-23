@@ -29,6 +29,8 @@ export const api = {
     call(`/drafts/${id}`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(draft) }),
   deleteDraft: (id) => call(`/drafts/${id}`, { method: 'DELETE' }),
   uploadImage: (blob) => call('/media', { method: 'POST', headers: { 'content-type': blob.type }, body: blob }),
+  // 링크 썸네일(og:image) 저장 — 로그인 필요
+  uploadOg: (id, blob) => call(`/og/${id}`, { method: 'PUT', headers: { 'content-type': blob.type }, body: blob }),
 }
 
 // 사진 용량 제한 (서버도 같은 값으로 막음)

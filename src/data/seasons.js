@@ -32,7 +32,11 @@ export const albumCategory = (x) => {
 export const categoriesOf = (data) => [...new Set([...CATEGORIES, ...data.albums.map(albumCategory)])]
 
 const sortKey = (x) => x.released || (x.date || '').replaceAll('.', '-')
-const byNewest = (x, y) => sortKey(y).localeCompare(sortKey(x))
+// 발매일이 같으면 평론 날짜 → id 순으로 고정 (서버 응답 순서에 따라 자리가 바뀌지 않게)
+const byNewest = (x, y) =>
+  sortKey(y).localeCompare(sortKey(x)) ||
+  (y.date || '').localeCompare(x.date || '') ||
+  String(x.id).localeCompare(String(y.id))
 
 // 시즌 안 앨범 순서: 카테고리 순, 각각 최신순 (메인 리스트와 같은 순서)
 export function seasonAlbums(data, code) {

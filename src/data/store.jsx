@@ -6,7 +6,7 @@ import { api, mediaUrl } from '../api'
 const DataContext = createContext(null)
 
 // 서버 글 → 화면에서 쓰는 모양
-function fromServer(posts) {
+export function fromServer(posts) {
   const albums = []
   const features = []
   for (const p of posts) {
@@ -45,6 +45,15 @@ function fromServer(posts) {
   return { albums, features }
 }
 
+// 기본 데이터 + 서버 글. 수정본은 기본 글 자리에 그대로 바꿔 넣음(맨 뒤로 보내지 않음) → 순서가 흔들리지 않게
+function merge(base, remote, deleted) {
+  const byId = new Map(remote.map((r) => [r.id, r]))
+  const baseIds = new Set(base.map((x) => x.id))
+  return [...base.map((x) => byId.get(x.id) || x), ...remote.filter((r) => !baseIds.has(r.id))].filter(
+    (x) => !deleted.includes(x.id),
+  )
+}
+
 export function DataProvider({ children }) {
   const [remote, setRemote] = useState({ albums: [], features: [], deleted: [] })
   const [loaded, setLoaded] = useState(false)
@@ -68,12 +77,8 @@ export function DataProvider({ children }) {
     () => ({
       // 서버에 같은 id 글이 있으면(수정본) 기본 데이터 대신 그것을
       // 삭제한 글은 빼고
-      albums: [...baseAlbums.filter((x) => !remote.albums.some((r) => r.id === x.id)), ...remote.albums].filter(
-        (x) => !remote.deleted.includes(x.id),
-      ),
-      features: [...baseFeatures.filter((x) => !remote.features.some((r) => r.id === x.id)), ...remote.features].filter(
-        (x) => !remote.deleted.includes(x.id),
-      ),
+      albums: merge(baseAlbums, remote.albums, remote.deleted),
+      features: merge(baseFeatures, remote.features, remote.deleted),
       loaded,
       reload,
     }),

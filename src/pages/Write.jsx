@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api, mediaUrl, shrinkImage } from '../api'
-import { useData } from '../data/store'
+import { fromServer, useData } from '../data/store'
+import { publishOg } from '../share/og'
 import { albumCategory, albumSeason, allSeasons, categoriesOf, seasonLabel } from '../data/seasons'
 import LogoRow from '../components/LogoRow'
 import { imageRatio } from '../components/PostImages'
@@ -405,6 +406,9 @@ export default function Write() {
         ? await api.updatePost(editing.id, { ...payload, date: editing.date, password })
         : await api.createPost(payload)
       if (draftId) await api.deleteDraft(draftId).catch(() => {}) // 올린 글의 임시저장은 정리
+      // 링크 썸네일: 사진 공유 첫 장 — 기다리지 않고 뒤에서 만들어 올림
+      const shown = fromServer([post])
+      publishOg(post.kind, post.kind === 'review' ? shown.albums[0] : shown.features[0])
       await data.reload()
       navigate(kind === 'review' ? `/${post.season}?album=${post.id}` : `/post/${post.id}`)
     } catch (err) {

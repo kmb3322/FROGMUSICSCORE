@@ -7,6 +7,7 @@ import SideColumn, { alignedRows, asLines } from '../components/PostImages'
 import ReviewActions, { ShareCards } from '../components/ReviewActions'
 import FeatureFlow from '../components/FeatureFlow'
 import { makeFeatureCards } from '../share/featureCards'
+import { refreshOgIfAdmin } from '../share/og'
 import Ko from '../Ko'
 import './Post.css'
 
@@ -31,6 +32,7 @@ export default function Feature() {
         shareTitle={post.title}
         makeImages={() => makeFeatureCards(post, `${seasonLabel(post.season)}\n${dateLabel(post.date)}`)}
         onCards={setCards}
+        onShareLink={() => refreshOgIfAdmin('feature', post)}
       />
       <p className="post-site">{SITE}</p>
     </>

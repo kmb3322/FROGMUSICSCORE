@@ -217,3 +217,10 @@ export async function makeFeatureCards(post, seasonText) {
   return cards.slice(0, MAX_CARDS)
 }
 
+
+// 링크 썸네일(og:image)용: 1장만
+export async function makeFeatureFirstCard(post) {
+  const photos = (post.side || []).filter((b) => b.type === 'image')
+  await document.fonts.load(font(SIZE), [post.title, post.writer, ...LOGO].join(' ')).catch(() => {})
+  return coverCard(post, photos[0])
+}

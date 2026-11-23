@@ -34,7 +34,16 @@ export default {
         headers: { location: `https://${url.host}${url.pathname}${url.search}`, 'cache-control': 'public, max-age=86400' },
       })
     }
-    if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(req)
+    if (!url.pathname.startsWith('/api/')) {
+      const res = await env.ASSETS.fetch(req)
+      if (req.method !== 'GET') return res
+      try {
+        return await withShareMeta(env, url, res) // 리뷰·기획 주소: 링크 썸네일 meta
+      } catch (err) {
+        console.error(err)
+        return env.ASSETS.fetch(req) // 썸네일 때문에 페이지가 안 열리면 안 됨
+      }
+    }
     try {
       return await api(req, env, ctx, url)
     } catch (err) {
@@ -58,6 +67,11 @@ async function api(req, env, ctx, url) {
 
   if (path.startsWith('/media/') && method === 'GET') {
     return getMedia(req, env, ctx, path.slice('/media/'.length))
+  }
+
+  // 링크 썸네일 이미지 (누구나 받음 — 메신저 미리보기 봇)
+  if (path.startsWith('/og/') && method === 'GET') {
+    return getOg(req, env, ctx, path.slice('/og/'.length))
   }
 
   // ── 좋아요 (로그인 없이 누구나, 한 사람은 리뷰마다 하루 한 번) ──
@@ -130,6 +144,18 @@ async function api(req, env, ctx, url) {
     return json({ id })
   }
 
+  // 링크 썸네일 저장: 사진 공유 첫 장을 브라우저에서 잘라 올림 (src/share/og.js). 같은 글은 덮어씀
+  const og = path.match(/^\/og\/([a-z0-9][a-z0-9-]{0,80})$/)
+  if (og && method === 'PUT') {
+    const type = (req.headers.get('content-type') || '').split(';')[0]
+    if (!/^image\/(webp|jpeg|png)$/.test(type)) return json({ error: 'bad_type' }, 400)
+    const body = await req.arrayBuffer()
+    if (!body.byteLength || body.byteLength > MAX_IMAGE) return json({ error: 'bad_size' }, 400)
+    await env.MEDIA.put(`og/${og[1]}`, body, { httpMetadata: { contentType: type } })
+    ctx.waitUntil(caches.default.delete(new Request(`${url.origin}/api/og/${og[1]}`)))
+    return json({ ok: true })
+  }
+
   if (path === '/posts' && method === 'POST') {
     const post = validate(await req.json().catch(() => null))
     if (!post) return json({ error: 'bad_post' }, 400)
@@ -177,6 +203,7 @@ async function api(req, env, ctx, url) {
       env.DB.prepare('INSERT OR REPLACE INTO deleted_posts (id, deleted_at) VALUES (?, ?)').bind(del[1], Date.now()),
     ])
     if (prev) ctx.waitUntil(removeMedia(env, mediaOf(JSON.parse(prev.data)), url.origin))
+    ctx.waitUntil(env.MEDIA.delete(`og/${del[1]}`)) // 링크 썸네일도
     return json({ ok: true })
   }
 
@@ -366,4 +393,82 @@ async function authed(req, env) {
   const m = cookie.match(/(?:^|;\s*)fms_auth=(\d+)\.([\w-]+)/)
   if (!m || Number(m[1]) < Date.now() / 1000) return false
   return safeEqual(m[2], await sign(env, `fms:${m[1]}`))
+}
+
+// ── 링크 공유 썸네일 (og:image) ──
+// 메신저·SNS 미리보기 봇은 JS를 실행하지 않으므로, 리뷰·기획 주소의 HTML에 직접 meta를 넣어 줌.
+// 이미지: 사진 공유 첫 장을 1200×630으로 위에서부터 자른 것 (브라우저에서 만들어 R2 og/<id>에 저장, src/share/og.js)
+//         아직 없으면 리뷰 커버 / 기획 첫 사진
+const OG_ID = /^[a-z0-9][a-z0-9-]{0,80}$/
+const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+async function withShareMeta(env, url, res) {
+  if (!(res.headers.get('content-type') || '').includes('text/html')) return res
+  let id = null
+  const season = url.pathname.match(/^\/(\d{2}(?:SS|FW))\/?$/i)
+  const feature = url.pathname.match(/^\/post\/([^/]+)\/?$/)
+  if (season) id = url.searchParams.get('album')
+  else if (feature) id = decodeURIComponent(feature[1])
+  if (!id || !OG_ID.test(id)) return res
+
+  const [og, row] = await Promise.all([
+    env.MEDIA.head(`og/${id}`),
+    env.DB.prepare('SELECT data FROM posts WHERE id = ?').bind(id).first(),
+  ])
+  const post = row ? JSON.parse(row.data) : null
+  let image = null
+  let size = null
+  if (og) {
+    image = `${url.origin}/api/og/${id}?v=${og.uploaded.getTime().toString(36)}` // 새로 만들면 주소가 바뀌어 다시 받아 감
+    size = [1200, 630]
+  } else if (post?.kind === 'review') {
+    image = post.cover ? `${url.origin}/api/media/${post.cover}` : post.coverPath ? `${url.origin}/${post.coverPath}` : null
+  } else if (post?.kind === 'feature') {
+    const first = (post.side || []).find((b) => b.type === 'image')
+    image = first?.media ? `${url.origin}/api/media/${first.media}` : first?.path ? `${url.origin}/${first.path}` : null
+  }
+  const title = post
+    ? `${post.kind === 'review' ? `${post.artist} — ${post.title}` : post.title} | FROG MUSIC SCORE`
+    : null
+  if (!image && !title) return res
+
+  const tags = [
+    ['og:type', 'article'],
+    ['og:site_name', 'FROG MUSIC SCORE KOREA'],
+    ['og:url', `${url.origin}${url.pathname}${url.search}`],
+    title && ['og:title', title],
+    image && ['og:image', image],
+    size && ['og:image:width', size[0]],
+    size && ['og:image:height', size[1]],
+  ]
+    .filter(Boolean)
+    .map(([k, v]) => `<meta property="${k}" content="${esc(v)}" />`)
+  if (image) tags.push(`<meta name="twitter:card" content="summary_large_image" />`, `<meta name="twitter:image" content="${esc(image)}" />`)
+  if (title) tags.push(`<meta name="twitter:title" content="${esc(title)}" />`)
+
+  const out = new HTMLRewriter()
+    .on('head', { element: (el) => el.append(tags.join(''), { html: true }) })
+    .on('title', { element: (el) => title && el.setInnerContent(title) })
+    .transform(res)
+  const headers = new Headers(out.headers)
+  headers.delete('etag') // 내용이 글마다 달라졌으므로
+  headers.set('cache-control', 'no-cache')
+  return new Response(out.body, { status: out.status, headers })
+}
+
+async function getOg(req, env, ctx, id) {
+  if (!OG_ID.test(id)) return json({ error: 'not_found' }, 404)
+  const cache = caches.default
+  const hit = await cache.match(req)
+  if (hit) return hit
+  const obj = await env.MEDIA.get(`og/${id}`)
+  if (!obj) return json({ error: 'not_found' }, 404)
+  const headers = new Headers()
+  obj.writeHttpMetadata(headers)
+  headers.set('etag', obj.httpEtag)
+  // ?v=(만든 시각)이 붙은 주소는 바뀌지 않음
+  headers.set('cache-control', new URL(req.url).searchParams.has('v') ? 'public, max-age=31536000, immutable' : 'public, max-age=300')
+  const res = new Response(obj.body, { headers })
+  ctx.waitUntil(cache.put(req, res.clone()))
+  return res
 }

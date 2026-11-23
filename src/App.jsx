@@ -13,8 +13,11 @@ function SeasonRoute() {
   const [params] = useSearchParams()
   const data = useData()
   const code = (season || '').toUpperCase()
+  // 서버 글을 다 받기 전엔 그리지 않음 — 기본 데이터로 먼저 그리면 시작 앨범 번호가 정해진 뒤
+  // 서버 글이 끼어들어 다른 앨범이 보이거나 순서가 바뀌었음
+  if (!data.loaded) return null
   const found = isSeason(code) && seasonAlbums(data, code).length > 0
-  if (!found) return data.loaded ? <Navigate to="/" replace /> : null // 서버 글 로딩 중엔 잠깐 대기
+  if (!found) return <Navigate to="/" replace />
   return <Season key={code} code={code} startId={params.get('album')} />
 }
 

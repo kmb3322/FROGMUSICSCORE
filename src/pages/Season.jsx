@@ -7,6 +7,7 @@ import ColorFlow from '../components/ColorFlow'
 import usePager from '../usePager'
 import ReviewActions, { ShareCards } from '../components/ReviewActions'
 import { makeCards } from '../share/cards'
+import { refreshOgIfAdmin } from '../share/og'
 import { asLines } from '../components/PostImages'
 import Ko from '../Ko'
 import '../App.css'
@@ -139,6 +140,7 @@ export default function Season({ code, startId }) {
                 shareTitle={`${album.artist} — ${album.title}`}
                 makeImages={() => makeCards(album, `${seasonLabel(code)}\n${dateLabel(album.date)}`)}
                 onCards={setCards}
+                onShareLink={() => refreshOgIfAdmin('review', album)}
               />
               <p className="review-site">{SITE}</p>
             </div>
