@@ -34,6 +34,24 @@ const MODES = [
 // 앨범 → 그 시즌 뷰어에서 해당 앨범부터
 const albumLink = (x) => `/${albumSeason(x)}?album=${x.id}`
 
+// 마지막으로 보던 연도 (이 탭에서만) — 시즌·기획 페이지에서 메인으로 돌아오면 그 연도 그대로
+const YEAR_KEY = 'fms-year'
+const lastYear = () => {
+  try {
+    return Number(sessionStorage.getItem(YEAR_KEY)) || null
+  } catch {
+    return null
+  }
+}
+const rememberYear = (y) => {
+  try {
+    if (y) sessionStorage.setItem(YEAR_KEY, String(y))
+    else sessionStorage.removeItem(YEAR_KEY)
+  } catch {
+    // 저장이 막힌 브라우저면 기억 없이 최신 연도
+  }
+}
+
 // 로고를 이 간격 안에 10번 연속 누르면 비밀번호 페이지로
 const SECRET_CLICKS = 10
 const CLICK_GAP = 1200
@@ -45,6 +63,7 @@ export default function Home() {
   const clicks = useRef({ n: 0, t: 0 })
   const onLogo = (e) => {
     setQuery('')
+    rememberYear(null) // 메인에서 로고를 누르면 최신 연도 첫 화면으로
     const now = Date.now()
     clicks.current.n = now - clicks.current.t < CLICK_GAP ? clicks.current.n + 1 : 1
     clicks.current.t = now
@@ -55,9 +74,16 @@ export default function Home() {
     }
   }
   const [params, setParams] = useSearchParams()
-  const year = years.includes(Number(params.get('year'))) ? Number(params.get('year')) : years[0]
+  // 주소에 연도가 있으면 그것, 없으면 마지막으로 보던 연도, 그것도 없으면 최신
+  const year = [Number(params.get('year')), lastYear()].find((y) => years.includes(y)) ?? years[0]
   const yi = years.indexOf(year)
-  const setYear = (y) => setParams(y === years[0] ? {} : { year: String(y) })
+  const setYear = (y) => {
+    rememberYear(y)
+    setParams(y === years[0] ? {} : { year: String(y) })
+  }
+  useEffect(() => {
+    if (data.loaded && year) rememberYear(year) // 서버 글을 받기 전 기본 데이터의 연도로 덮어쓰지 않게
+  }, [data.loaded, year])
 
   const [query, setQuery] = useState('')
   const [mode, setMode] = useState('album')

@@ -111,6 +111,9 @@
   display: flex;
   align-items: flex-start;
   overflow-x: auto;
+  /* 세로는 막음: overflow-x만 주면 세로도 auto가 되어, 글자 줄 높이로 1~2px 넘치는 순간
+     이 칸이 세로 휠을 먼저 가로채 페이지 스크롤이 될 때도 안 될 때도 있었음 */
+  overflow-y: hidden;
   overscroll-behavior-x: contain;
   scrollbar-width: none;
 }
