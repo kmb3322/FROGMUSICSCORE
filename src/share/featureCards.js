@@ -7,7 +7,7 @@
 //  - 사진이 있는 카드의 글은 사진의 위아래 범위 안에서만 (시작·끝 모두)
 //  - 글이 두 카드에 다 안 들어가면 그 뒤에 글만 있는 카드를 이어 붙임
 
-import { SITE } from '../data/seasons'
+import { byWriter, SITE } from '../data/seasons'
 import { BG, canvas, drawLogo, FG, font, H, LINE, loadImage, LOGO, PAD, SIZE, tintedText, toBlob, W } from './cards'
 
 const MAX_PHOTOS = 10
@@ -123,7 +123,7 @@ async function coverCard(post, photo) {
   // 상단: 제목 · 작성자
   ctx.font = font(SIZE)
   const { lines } = take(ctx, post.title, W - PAD * 2, 4)
-  if (post.writer) lines.push({ text: post.writer })
+  if (post.writer) lines.push({ text: byWriter(post.writer) })
   writeLines(ctx, lines, PAD)
 
   if (!photo) {

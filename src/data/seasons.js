@@ -87,9 +87,9 @@ export function search(data, query, mode) {
   return data.albums.filter((x) => norm(field(x)).includes(q)).sort(byNewest)
 }
 
-// 글 끝 날짜 줄: 시즌 / 발매일 / 작성일 (없는 것은 뺌 — 기획 글은 발매일 없음). 화면 · 공유 카드 공통
+// 글 끝 날짜 줄: 시즌 / Released(발매일) / Written(작성일) (없는 것은 뺌 — 기획 글은 발매일 없음). 화면 · 공유 카드 공통
 export const metaLines = (season, { released, date } = {}) =>
-  [seasonLabel(season), released && `발매일 ${dateLabel(released)}`, date && `작성일 ${dateLabel(date)}`].filter(Boolean)
+  [seasonLabel(season), released && `Released ${dateLabel(released)}`, date && `Written ${dateLabel(date)}`].filter(Boolean)
 
 // 평론 작성자 표시: 'by 이름' (이름이 없으면 빈 줄)
 export const byWriter = (w) => (w ? `by ${w}` : '')

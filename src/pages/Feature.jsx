@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import { useData } from '../data/store'
-import { metaLines, SITE } from '../data/seasons'
+import { byWriter, metaLines, SITE } from '../data/seasons'
 import LogoRow from '../components/LogoRow'
 import SideColumn, { alignedRows, asLines } from '../components/PostImages'
 import ReviewActions, { ShareCards } from '../components/ReviewActions'
@@ -50,7 +50,7 @@ export default function Feature() {
       <article>
         <header className="post-info">
           <div><Ko>{post.title}</Ko></div>
-          {post.writer && <div><Ko>{post.writer}</Ko></div>}
+          {post.writer && <div><Ko>{byWriter(post.writer)}</Ko></div>}
         </header>
 
         {/* 사진마다 글 영역을 지정했으면 그 구간과 사진을 같은 높이에서 시작, 아니면 두 칸이 따로 흐름.

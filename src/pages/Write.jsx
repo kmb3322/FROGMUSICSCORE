@@ -386,8 +386,8 @@ export default function Write() {
     const score = Number(f.score)
     if (missing.length) return setStatus(`빈 칸 — ${missing.join(', ')}`)
     if (kind === 'review' && !(score >= 0 && score <= 10)) return setStatus('점수 0–10')
-    if (kind === 'review' && f.released && !/^\d{4} \d{2} \d{2}$/.test(f.released)) return setStatus('발매일 YYYY MM DD')
-    if (f.date && !/^\d{4} \d{2} \d{2}$/.test(f.date)) return setStatus('작성일 YYYY MM DD')
+    if (kind === 'review' && f.released && !/^\d{4} \d{2} \d{2}$/.test(f.released)) return setStatus('Released YYYY MM DD')
+    if (f.date && !/^\d{4} \d{2} \d{2}$/.test(f.date)) return setStatus('Written YYYY MM DD')
 
     setBusy(true)
     try {
@@ -537,7 +537,7 @@ export default function Write() {
               value={f.released}
               onChange={(e) => setF((v) => ({ ...v, released: formatDate(e.target.value) }))}
               onBlur={() => setF((v) => ({ ...v, released: finishDate(v.released) }))}
-              placeholder="발매일 YYYY MM DD"
+              placeholder="Released YYYY MM DD"
               inputMode="numeric"
             />
             <input
@@ -545,7 +545,7 @@ export default function Write() {
               value={f.date}
               onChange={(e) => setF((v) => ({ ...v, date: formatDate(e.target.value) }))}
               onBlur={() => setF((v) => ({ ...v, date: finishDate(v.date) }))}
-              placeholder={`작성일 ${today()}`} // 비워 두면 올리는 날(오늘)
+              placeholder={`Written ${today()}`} // 비워 두면 올리는 날(오늘)
               inputMode="numeric"
             />
             <input className="field" value={f.keywords} onChange={set('keywords')} placeholder="키워드" />
@@ -559,7 +559,7 @@ export default function Write() {
               value={f.date}
               onChange={(e) => setF((v) => ({ ...v, date: formatDate(e.target.value) }))}
               onBlur={() => setF((v) => ({ ...v, date: finishDate(v.date) }))}
-              placeholder={`작성일 ${today()}`} // 비워 두면 올리는 날(오늘)
+              placeholder={`Written ${today()}`} // 비워 두면 올리는 날(오늘)
               inputMode="numeric"
             />
           </>
